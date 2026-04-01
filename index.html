@@ -38,6 +38,87 @@
 </head>
 <body>
 
+<noscript>
+  <style>
+    #app {
+      display: none !important;
+    }
+    .noscript-fallback {
+      box-sizing: border-box;
+      position: fixed;
+      inset: 0;
+      z-index: 2147483647;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: linear-gradient(145deg, #0f1923 0%, #1a2835 50%, #0f1923 100%);
+      color: #e8eef4;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      text-align: left;
+    }
+    .noscript-fallback-inner {
+      max-width: 520px;
+      width: 100%;
+      border: 1px solid rgba(9, 188, 138, 0.35);
+      border-radius: 16px;
+      padding: 28px 28px 24px;
+      background: rgba(20, 31, 43, 0.95);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+    }
+    .noscript-fallback h1 {
+      margin: 0 0 12px;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #f0f4f8;
+    }
+    .noscript-fallback p {
+      margin: 0 0 14px;
+      font-size: 0.95rem;
+      color: #94a8be;
+    }
+    .noscript-fallback strong {
+      color: #09bc8a;
+    }
+    .noscript-fallback ol {
+      margin: 0 0 16px;
+      padding-left: 1.25rem;
+      color: #c5d4e0;
+      font-size: 0.9rem;
+    }
+    .noscript-fallback li {
+      margin-bottom: 8px;
+    }
+    .noscript-fallback .noscript-hint {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.82rem;
+      color: #7a8fa3;
+    }
+  </style>
+  <div class="noscript-fallback" role="alert">
+    <div class="noscript-fallback-inner">
+      <h1>JavaScript est désactivé</h1>
+      <p>
+        <strong>INVOO OFFICE</strong> est une application qui fonctionne entièrement dans votre navigateur
+        (données locales, factures, PDF, mode hors ligne). <strong>Elle nécessite JavaScript activé</strong>
+        pour pouvoir démarrer.
+      </p>
+      <p>Activez JavaScript, puis rechargez cette page :</p>
+      <ol>
+        <li><strong>Chrome / Edge / Brave :</strong> menu ⋮ → Paramètres → Confidentialité et sécurité → Paramètres des sites → JavaScript → Autoriser les sites à utiliser JavaScript.</li>
+        <li><strong>Firefox :</strong> menu → Paramètres → Confidentialité et sécurité → autoriser le JavaScript (ou désactiver les bloqueurs sur ce site).</li>
+        <li><strong>Safari (Mac / iOS) :</strong> Réglages → Safari → Avancé → activer JavaScript ; sur Mac : Safari → Réglages → Sécurité → cocher JavaScript.</li>
+      </ol>
+      <p class="noscript-hint">
+        Si JavaScript est déjà activé, vérifiez qu’aucune extension (bloqueur de scripts, mode strict) ne bloque ce domaine.
+      </p>
+    </div>
+  </div>
+</noscript>
+
 <div id="toast"></div>
 
 <!-- ONBOARDING -->
@@ -45,7 +126,7 @@
   <div class="ob-card">
     <div class="ob-progress"><div class="ob-progress-fill ob-progress-fill-init" id="ob-progress-fill"></div></div>
     <div class="ob-header">
-      <div class="ob-icon" id="ob-icon">🏢</div>
+      <div class="ob-icon" id="ob-icon" aria-hidden="true">🏢</div>
       <h2 id="ob-title">Bienvenue dans INVOO OFFICE</h2>
       <p id="ob-desc">Configurez votre entreprise en 3 étapes pour créer des factures conformes aux normes DGI marocaines.</p>
     </div>
@@ -81,7 +162,7 @@
   <div class="search-input-wrap">
     <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     <input id="search-input" placeholder="Rechercher facture, client, article..." autocomplete="off">
-    <button type="button" id="search-close" class="search-close" aria-label="Fermer la recherche">✕</button>
+    <button type="button" id="search-close" class="search-close" aria-label="Fermer la recherche"><span aria-hidden="true">✕</span></button>
     <span class="search-shortcut">Échap pour fermer</span>
   </div>
   <div id="search-results"></div>
@@ -105,14 +186,14 @@
 <div id="sidebar-overlay"></div>
 
 <!-- MOBILE: bottom tab bar -->
-<div id="mob-tabbar"><div id="mob-tabbar-inner"><button class="mob-tab active" data-page="overview"><span class="mob-tab-icon">📊</span><span class="mob-tab-label">Accueil</span></button><button class="mob-tab" data-page="generate"><span class="mob-tab-icon">✚</span><span class="mob-tab-label">Créer</span></button><button class="mob-tab" data-page="history"><span class="mob-tab-icon">📋</span><span class="mob-tab-label">Historique</span></button><button class="mob-tab" data-page="clients"><span class="mob-tab-icon">👥</span><span class="mob-tab-label">Clients</span></button><button class="mob-tab" data-action="menu"><span class="mob-tab-icon">☰</span><span class="mob-tab-label">Menu</span></button></div></div>
+<div id="mob-tabbar"><div id="mob-tabbar-inner"><button class="mob-tab active" data-page="overview"><span class="mob-tab-icon" aria-hidden="true">📊</span><span class="mob-tab-label">Accueil</span></button><button class="mob-tab" data-page="generate"><span class="mob-tab-icon" aria-hidden="true">✚</span><span class="mob-tab-label">Créer</span></button><button class="mob-tab" data-page="history"><span class="mob-tab-icon" aria-hidden="true">📋</span><span class="mob-tab-label">Historique</span></button><button class="mob-tab" data-page="clients"><span class="mob-tab-icon" aria-hidden="true">👥</span><span class="mob-tab-label">Clients</span></button><button class="mob-tab" data-action="menu"><span class="mob-tab-icon" aria-hidden="true">☰</span><span class="mob-tab-label">Menu</span></button></div></div>
 
 <!-- MOBILE: actions sheet (feature parity desktop/mobile) -->
 <div id="mob-actions-overlay" aria-hidden="true"></div>
 <section id="mob-actions-sheet" aria-hidden="true" aria-label="Actions mobile">
   <div class="mob-actions-sheet-header">
     <div class="mob-actions-sheet-title">Plus d'actions</div>
-    <button type="button" id="mob-actions-close" class="mob-actions-close" aria-label="Fermer le menu mobile">✕</button>
+    <button type="button" id="mob-actions-close" class="mob-actions-close" aria-label="Fermer le menu mobile"><span aria-hidden="true">✕</span></button>
   </div>
   <div class="mob-actions-grid">
     <button type="button" class="mob-action-item" data-page="reports"><span aria-hidden="true">📈</span>Rapports / Fiscal</button>
@@ -127,7 +208,7 @@
 </section>
 
 <!-- MOBILE: FAB -->
-<button id="mob-fab" aria-label="Créer un document">✚</button>
+<button id="mob-fab" aria-label="Créer un document"><span aria-hidden="true">✚</span></button>
 
 <div id="app">
   <!-- SIDEBAR -->
@@ -207,8 +288,8 @@
 <div class="modal-overlay" id="modal-stock-moves" role="dialog" aria-modal="true" aria-labelledby="stock-moves-modal-title" aria-hidden="true">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <div class="modal-title" id="stock-moves-modal-title">🧾 Historique des mouvements de stock</div>
-      <button type="button" class="modal-close" id="btn-close-stock-moves" aria-label="Fermer">✕</button>
+      <div class="modal-title" id="stock-moves-modal-title"><span aria-hidden="true">🧾</span> Historique des mouvements de stock</div>
+      <button type="button" class="modal-close" id="btn-close-stock-moves" aria-label="Fermer"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="modal-body">
       <div class="stock-moves-filters">
@@ -223,7 +304,7 @@
           <option value="replace">Remplacement</option>
           <option value="adjust">Ajustement</option>
         </select>
-        <button class="btn btn-danger btn-sm" id="btn-clear-stock-moves">🗑 Vider</button>
+        <button class="btn btn-danger btn-sm" id="btn-clear-stock-moves"><span aria-hidden="true">🗑</span> Vider</button>
       </div>
       <div class="tbl-wrap stock-moves-table-wrap">
         <table>
@@ -250,14 +331,14 @@
 <div class="modal-overlay" id="modal-import-masse" role="dialog" aria-modal="true" aria-labelledby="import-masse-modal-title" aria-hidden="true">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <div class="modal-title" id="import-masse-modal-title">📥 Import CSV — Stock</div>
-      <button type="button" class="modal-close" id="btn-close-import-masse" aria-label="Fermer">✕</button>
+      <div class="modal-title" id="import-masse-modal-title"><span aria-hidden="true">📥</span> Import CSV — Stock</div>
+      <button type="button" class="modal-close" id="btn-close-import-masse" aria-label="Fermer"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="modal-body">
       <p class="import-help-text">Le fichier suit les <strong>mêmes champs</strong> que la grille « Gestion du Stock ». Après chargement, un <strong>aperçu</strong> permet de vérifier la cohérence avant d’enregistrer ; les doublons de code-barres sont signalés.</p>
       <!-- Zone upload -->
       <div id="import-drop-zone" data-dropzone="import" class="import-drop-zone">
-        <div class="import-drop-icon">📂</div>
+        <div class="import-drop-icon" aria-hidden="true">📂</div>
         <div class="import-drop-title">Glissez votre fichier CSV ici</div>
         <div class="import-drop-sub">ou cliquez pour sélectionner</div>
         <div class="import-drop-cta">
@@ -271,8 +352,8 @@
       <!-- Modèle CSV -->
       <div class="import-template-card">
         <div class="import-template-head">
-          <div class="import-template-title">📋 Format du fichier CSV attendu</div>
-          <button class="btn btn-secondary btn-sm" id="btn-dl-import-template">⬇️ Télécharger le modèle</button>
+          <div class="import-template-title"><span aria-hidden="true">📋</span> Format du fichier CSV attendu</div>
+          <button class="btn btn-secondary btn-sm" id="btn-dl-import-template"><span aria-hidden="true">⬇️</span> Télécharger le modèle</button>
         </div>
         <div class="import-template-code">
           nom,code_barre,categorie,fournisseur,quantite,prix_achat_ttc,prix_vente_ttc,tva,unite,seuil_alerte<br>
@@ -308,7 +389,7 @@
         </div>
         <div id="import-errors-wrap" class="import-errors-wrap">
           <div class="import-errors-box">
-            <div class="import-errors-title">⚠️ Avertissements</div>
+            <div class="import-errors-title"><span aria-hidden="true">⚠️</span> Avertissements</div>
             <div id="import-errors-list" class="import-errors-list"></div>
           </div>
         </div>
@@ -328,13 +409,13 @@
 <div class="modal-overlay" id="modal-import-fourn" role="dialog" aria-modal="true" aria-labelledby="import-fourn-modal-title" aria-hidden="true">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <div class="modal-title" id="import-fourn-modal-title">📥 Import CSV — Fournisseurs</div>
-      <button type="button" class="modal-close" id="btn-close-import-fourn" aria-label="Fermer">✕</button>
+      <div class="modal-title" id="import-fourn-modal-title"><span aria-hidden="true">📥</span> Import CSV — Fournisseurs</div>
+      <button type="button" class="modal-close" id="btn-close-import-fourn" aria-label="Fermer"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="modal-body">
       <p class="import-help-text">Le fichier reprend les <strong>mêmes colonnes</strong> que l’export CSV et la fiche fournisseur. Après chargement, un <strong>aperçu</strong> indique les <strong>nouveaux</strong> enregistrements, les <strong>mises à jour</strong> (même <code class="code-inline-xs">id</code> qu’en base) et les <strong>doublons</strong> (même nom + ICE) ignorés à l’import.</p>
       <div id="import-fourn-drop-zone" data-dropzone="import-fourn" class="import-drop-zone">
-        <div class="import-drop-icon">📂</div>
+        <div class="import-drop-icon" aria-hidden="true">📂</div>
         <div class="import-drop-title">Glissez votre fichier CSV ici</div>
         <div class="import-drop-sub">ou cliquez pour sélectionner</div>
         <div class="import-drop-cta">
@@ -346,8 +427,8 @@
       </div>
       <div class="import-template-card">
         <div class="import-template-head">
-          <div class="import-template-title">📋 Format du fichier CSV attendu</div>
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-dl-fourn-template">⬇️ Télécharger le modèle</button>
+          <div class="import-template-title"><span aria-hidden="true">📋</span> Format du fichier CSV attendu</div>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-dl-fourn-template"><span aria-hidden="true">⬇️</span> Télécharger le modèle</button>
         </div>
         <div class="import-template-code">
           id,nom,categorie,score,ice,if,email,telephone,ville,adresse,notes<br>
@@ -369,7 +450,7 @@
         </div>
         <div id="import-fourn-errors-wrap" class="import-errors-wrap">
           <div class="import-errors-box">
-            <div class="import-errors-title">⚠️ Avertissements</div>
+            <div class="import-errors-title"><span aria-hidden="true">⚠️</span> Avertissements</div>
             <div id="import-fourn-errors-list" class="import-errors-list"></div>
           </div>
         </div>
@@ -389,8 +470,8 @@
 <div class="modal-overlay" id="modal-import-clients" role="dialog" aria-modal="true" aria-labelledby="import-clients-modal-title" aria-hidden="true">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <div class="modal-title" id="import-clients-modal-title">📥 Import CSV — Clients</div>
-      <button type="button" class="modal-close" id="btn-close-import-clients" aria-label="Fermer">✕</button>
+      <div class="modal-title" id="import-clients-modal-title"><span aria-hidden="true">📥</span> Import CSV — Clients</div>
+      <button type="button" class="modal-close" id="btn-close-import-clients" aria-label="Fermer"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="modal-body">
       <p class="import-help-text">
@@ -400,7 +481,7 @@
 
       <!-- Zone upload -->
       <div id="import-clients-drop-zone" data-dropzone="import-clients" class="import-drop-zone">
-        <div class="import-drop-icon">📂</div>
+        <div class="import-drop-icon" aria-hidden="true">📂</div>
         <div class="import-drop-title">Glissez votre fichier CSV ici</div>
         <div class="import-drop-sub">ou cliquez pour sélectionner</div>
         <div class="import-drop-cta">
@@ -414,8 +495,8 @@
       <!-- Modèle CSV -->
       <div class="import-template-card">
         <div class="import-template-head">
-          <div class="import-template-title">📋 Format du fichier CSV attendu</div>
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-dl-import-clients-template">⬇️ Télécharger le modèle</button>
+          <div class="import-template-title"><span aria-hidden="true">📋</span> Format du fichier CSV attendu</div>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-dl-import-clients-template"><span aria-hidden="true">⬇️</span> Télécharger le modèle</button>
         </div>
         <div class="import-template-code">
           nom,ice,if,rc,email,telephone,ville<br>
@@ -449,7 +530,7 @@
         </div>
         <div id="import-clients-errors-wrap" class="import-errors-wrap">
           <div class="import-errors-box">
-            <div class="import-errors-title">⚠️ Avertissements</div>
+            <div class="import-errors-title"><span aria-hidden="true">⚠️</span> Avertissements</div>
             <div id="import-clients-errors-list" class="import-errors-list"></div>
           </div>
         </div>
@@ -470,7 +551,7 @@
   <div class="modal modal-fourn">
     <div class="modal-header">
       <div class="modal-title" id="fourn-modal-title">Nouveau Fournisseur</div>
-      <button type="button" class="modal-close" id="btn-close-fourn" aria-label="Fermer">✕</button>
+      <button type="button" class="modal-close" id="btn-close-fourn" aria-label="Fermer"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="modal-body">
 
@@ -481,21 +562,21 @@
           <label class="fourn-score-option">
             <input type="radio" name="fourn-score-radio" value="A" class="fourn-score-radio">
             <div class="fourn-score-card fourn-score-card-active" data-score="A">
-              <div class="fourn-score-emoji">🟢</div>
+              <div class="fourn-score-emoji" aria-hidden="true">🟢</div>
               <div class="fourn-score-text fourn-score-text-a">A — Fiable</div>
             </div>
           </label>
           <label class="fourn-score-option">
             <input type="radio" name="fourn-score-radio" value="B" class="fourn-score-radio">
             <div class="fourn-score-card fourn-score-card-inactive" data-score="B">
-              <div class="fourn-score-emoji">🔵</div>
+              <div class="fourn-score-emoji" aria-hidden="true">🔵</div>
               <div class="fourn-score-text">B — Correct</div>
             </div>
           </label>
           <label class="fourn-score-option">
             <input type="radio" name="fourn-score-radio" value="C" class="fourn-score-radio">
             <div class="fourn-score-card fourn-score-card-inactive" data-score="C">
-              <div class="fourn-score-emoji">🟠</div>
+              <div class="fourn-score-emoji" aria-hidden="true">🟠</div>
               <div class="fourn-score-text">C — À surveiller</div>
             </div>
           </label>
@@ -532,7 +613,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" id="btn-cancel-fourn">Annuler</button>
-      <button class="btn btn-primary" id="btn-save-fourn">💾 Sauvegarder</button>
+      <button class="btn btn-primary" id="btn-save-fourn"><span aria-hidden="true">💾</span> Sauvegarder</button>
     </div>
   </div>
 </div>
@@ -559,7 +640,7 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
         Imprimer
       </button>
-      <button type="button" class="modal-close" id="btn-close-preview" aria-label="Fermer l’aperçu">✕</button>
+      <button type="button" class="modal-close" id="btn-close-preview" aria-label="Fermer l’aperçu"><span aria-hidden="true">✕</span></button>
     </div>
     <!-- Template selector strip -->
     <div class="pdf-preview-strip">
@@ -591,7 +672,7 @@
 <!-- MODALS -->
 <div class="modal-overlay" id="modal-article" role="dialog" aria-modal="true" aria-labelledby="article-modal-title" aria-hidden="true">
   <div class="modal">
-    <div class="modal-header"><div class="modal-title" id="article-modal-title">Ajouter un article</div><button type="button" class="modal-close" id="btn-close-article" aria-label="Fermer">✕</button></div>
+    <div class="modal-header"><div class="modal-title" id="article-modal-title">Ajouter un article</div><button type="button" class="modal-close" id="btn-close-article" aria-label="Fermer"><span aria-hidden="true">✕</span></button></div>
     <div class="modal-body">
       <div class="field-row c2"><div class="form-group"><label for="a-name">Désignation *</label><input id="a-name" name="article-name" placeholder="Nom de l'article" required></div><div class="form-group"><label for="a-barcode">Code barre</label><input id="a-barcode" name="article-barcode" placeholder="EAN-13"></div></div>
       <div class="field-row c2"><div class="form-group"><label for="a-category">Catégorie</label><input id="a-category" name="article-category" placeholder="Ex: Boissons..."></div><div class="form-group"><label for="a-qty">Quantité</label><input id="a-qty" name="article-qty" type="number" inputmode="decimal" value="0" min="0"></div></div>
@@ -606,16 +687,16 @@
 
 <div class="modal-overlay" id="modal-client" role="dialog" aria-modal="true" aria-labelledby="client-modal-title" aria-hidden="true">
   <div class="modal">
-    <div class="modal-header"><div class="modal-title" id="client-modal-title">Nouveau Client</div><button type="button" class="modal-close" id="btn-close-client" aria-label="Fermer">✕</button></div>
+    <div class="modal-header"><div class="modal-title" id="client-modal-title">Nouveau Client</div><button type="button" class="modal-close" id="btn-close-client" aria-label="Fermer"><span aria-hidden="true">✕</span></button></div>
     <div class="modal-body">
       <div class="client-type-grid">
         <div id="c-card-part" data-client-type="particulier" class="client-type-card client-type-card-part">
-          <div class="client-type-emoji">👤</div>
+          <div class="client-type-emoji" aria-hidden="true">👤</div>
           <div class="client-type-title client-type-title-part">Particulier</div>
           <div class="client-type-subtitle">Personne physique</div>
         </div>
         <div id="c-card-pro" data-client-type="professionnel" class="client-type-card client-type-card-pro">
-          <div class="client-type-emoji">🏢</div>
+          <div class="client-type-emoji" aria-hidden="true">🏢</div>
           <div class="client-type-title">Professionnel</div>
           <div class="client-type-subtitle">Entreprise, société</div>
         </div>
@@ -651,7 +732,7 @@
   <div class="modal modal-lg">
     <div class="modal-header">
       <div class="modal-title" id="bc-modal-title">Nouveau bon de commande</div>
-      <button type="button" class="modal-close" id="btn-close-bc-modal" aria-label="Fermer">✕</button>
+      <button type="button" class="modal-close" id="btn-close-bc-modal" aria-label="Fermer"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="modal-body">
       <div class="field-row c2 bc-top-fields">
@@ -670,7 +751,7 @@
       </div>
       <div class="bc-lines-header">
         <div class="bc-lines-title">Articles (stock)</div>
-        <button type="button" class="btn btn-secondary btn-sm" id="btn-bc-add-stock">📦 Ajouter depuis le stock</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-bc-add-stock"><span aria-hidden="true">📦</span> Ajouter depuis le stock</button>
       </div>
       <div class="tbl-wrap bc-lines-table-wrap">
         <table>
@@ -691,7 +772,7 @@
   <div class="modal modal-lg">
     <div class="modal-header">
       <div class="modal-title" id="bc-view-modal-title">Détail du bon</div>
-      <button type="button" class="modal-close" id="btn-close-bc-view" aria-label="Fermer">✕</button>
+      <button type="button" class="modal-close" id="btn-close-bc-view" aria-label="Fermer"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="modal-body" id="bc-view-body"></div>
     <div class="modal-footer">
@@ -703,8 +784,8 @@
 <div class="modal-overlay" id="modal-bc-stock-picker" role="dialog" aria-modal="true" aria-labelledby="bc-stock-picker-modal-title" aria-hidden="true">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <div class="modal-title" id="bc-stock-picker-modal-title">📦 Choisir un article</div>
-      <button type="button" class="modal-close" id="btn-close-bc-picker" aria-label="Fermer">✕</button>
+      <div class="modal-title" id="bc-stock-picker-modal-title"><span aria-hidden="true">📦</span> Choisir un article</div>
+      <button type="button" class="modal-close" id="btn-close-bc-picker" aria-label="Fermer"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="modal-body">
       <p class="bc-picker-help">Priorité aux articles du fournisseur sélectionné ; sinon tous les articles du stock sont proposés.</p>
@@ -722,7 +803,7 @@
 
 <div class="modal-overlay" id="modal-stock-picker" role="dialog" aria-modal="true" aria-labelledby="stock-picker-modal-title" aria-hidden="true">
   <div class="modal modal-lg">
-    <div class="modal-header"><div class="modal-title" id="stock-picker-modal-title">🔍 Chercher dans le stock</div><button type="button" class="modal-close" id="btn-close-stock-picker" aria-label="Fermer">✕</button></div>
+    <div class="modal-header"><div class="modal-title" id="stock-picker-modal-title"><span aria-hidden="true">🔍</span> Chercher dans le stock</div><button type="button" class="modal-close" id="btn-close-stock-picker" aria-label="Fermer"><span aria-hidden="true">✕</span></button></div>
     <div class="modal-body">
       <div class="stock-picker-toolbar">
         <label for="picker-search" class="sr-only">Rechercher par nom, catégorie ou code barre</label>
@@ -746,8 +827,8 @@
 <div class="modal-overlay" id="modal-barcode-scan" role="dialog" aria-modal="true" aria-labelledby="barcode-scan-modal-title" aria-hidden="true">
   <div class="modal modal-barcode-scan">
     <div class="modal-header">
-      <div class="modal-title" id="barcode-scan-modal-title">📷 Scanner code barre</div>
-      <button type="button" class="modal-close" id="btn-close-barcode-scan" aria-label="Fermer">✕</button>
+      <div class="modal-title" id="barcode-scan-modal-title"><span aria-hidden="true">📷</span> Scanner code barre</div>
+      <button type="button" class="modal-close" id="btn-close-barcode-scan" aria-label="Fermer"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="modal-body">
       <p class="barcode-scan-help">Placez le code barre devant la caméra. Dès qu’il est détecté, la recherche est remplie automatiquement.</p>
@@ -766,7 +847,7 @@
 
 <div class="modal-overlay" id="modal-sales" role="dialog" aria-modal="true" aria-labelledby="sales-modal-title" aria-hidden="true">
   <div class="modal modal-lg">
-    <div class="modal-header"><div class="modal-title" id="sales-modal-title">📈 État des Ventes</div><button type="button" class="modal-close" id="btn-close-sales-modal" aria-label="Fermer">✕</button></div>
+    <div class="modal-header"><div class="modal-title" id="sales-modal-title"><span aria-hidden="true">📈</span> État des Ventes</div><button type="button" class="modal-close" id="btn-close-sales-modal" aria-label="Fermer"><span aria-hidden="true">✕</span></button></div>
     <div class="modal-body" id="sales-content"></div>
   </div>
 </div>
@@ -774,16 +855,16 @@
 <!-- NOUVEAU CLIENT MODAL -->
 <div class="modal-overlay" id="modal-new-client-quick" role="dialog" aria-modal="true" aria-labelledby="ncq-modal-title" aria-hidden="true">
   <div class="modal modal-new-client-quick">
-    <div class="modal-header"><div class="modal-title" id="ncq-modal-title">Nouveau client</div><button type="button" class="modal-close" id="btn-close-ncq" aria-label="Fermer">✕</button></div>
+    <div class="modal-header"><div class="modal-title" id="ncq-modal-title">Nouveau client</div><button type="button" class="modal-close" id="btn-close-ncq" aria-label="Fermer"><span aria-hidden="true">✕</span></button></div>
     <div class="modal-body modal-body-ncq">
       <div class="grid-modal-2 ncq-type-grid">
         <div id="ncq-card-part" data-ncq-type="particulier" class="ncq-type-card ncq-type-card-part">
-          <div class="ncq-type-emoji">👤</div>
+          <div class="ncq-type-emoji" aria-hidden="true">👤</div>
           <div class="ncq-type-title ncq-type-title-part">Particulier</div>
           <div class="ncq-type-subtitle">Personne physique</div>
         </div>
         <div id="ncq-card-pro" data-ncq-type="professionnel" class="ncq-type-card ncq-type-card-pro">
-          <div class="ncq-type-emoji">🏢</div>
+          <div class="ncq-type-emoji" aria-hidden="true">🏢</div>
           <div class="ncq-type-title">Professionnel</div>
           <div class="ncq-type-subtitle">Entreprise, société</div>
         </div>
@@ -809,7 +890,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" id="btn-cancel-ncq">Annuler</button>
-      <button class="btn btn-primary" id="btn-save-ncq">✓ Créer et sélectionner</button>
+      <button class="btn btn-primary" id="btn-save-ncq"><span aria-hidden="true">✓</span> Créer et sélectionner</button>
     </div>
   </div>
 </div>
@@ -818,12 +899,12 @@
 <div class="modal-overlay" id="modal-convert" role="dialog" aria-modal="true" aria-labelledby="convert-modal-title" aria-hidden="true">
   <div class="modal modal-convert">
     <div class="modal-header">
-      <div class="modal-title" id="convert-modal-title">⚡ Conversion Devis → Facture</div>
-      <button type="button" class="modal-close" id="btn-close-convert" aria-label="Fermer">✕</button>
+      <div class="modal-title" id="convert-modal-title"><span aria-hidden="true">⚡</span> Conversion Devis → Facture</div>
+      <button type="button" class="modal-close" id="btn-close-convert" aria-label="Fermer"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="modal-body modal-body-convert">
       <div class="conv-modal-header">
-        <div class="conv-modal-icon">📝→📄</div>
+        <div class="conv-modal-icon" aria-hidden="true">📝→📄</div>
         <div>
           <div class="conv-modal-title" id="conv-title">Convertir ce devis</div>
           <div class="conv-modal-sub" id="conv-sub">Toutes les lignes, le client et les montants seront repris</div>
@@ -837,7 +918,7 @@
           <div class="cf-ref" id="conv-from-ref">D-2026-0001</div>
           <div class="conv-sub-muted" id="conv-from-client">—</div>
         </div>
-        <div class="conv-flow-arrow">⟶</div>
+        <div class="conv-flow-arrow" aria-hidden="true">⟶</div>
         <div class="conv-flow-box to">
           <div class="cf-label">Nouvelle facture</div>
           <div class="cf-ref" id="conv-to-ref">F-2026-0001</div>
@@ -885,7 +966,7 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" id="btn-cancel-convert">Annuler</button>
       <button class="btn btn-primary btn-gap-sm" id="btn-confirm-convert">
-        <span>⚡</span> Convertir en Facture
+        <span aria-hidden="true">⚡</span> Convertir en Facture
       </button>
     </div>
   </div>
@@ -912,10 +993,10 @@
   <div class="modal modal-confirm">
     <div class="modal-header modal-confirm-header">
       <div class="modal-confirm-title-wrap">
-        <span id="confirm-icon" class="confirm-icon">⚠️</span>
+        <span id="confirm-icon" class="confirm-icon" aria-hidden="true">⚠️</span>
         <div class="modal-title" id="confirm-title">Confirmer</div>
       </div>
-      <button type="button" class="modal-close" id="confirm-btn-close" aria-label="Fermer">✕</button>
+      <button type="button" class="modal-close" id="confirm-btn-close" aria-label="Fermer"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="modal-body modal-confirm-body">
       <p id="confirm-message" class="confirm-message"></p>
