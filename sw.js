@@ -3,15 +3,17 @@
 //  Stratégies de cache pour mode hors-ligne
 // ═══════════════════════════════════════════
 
-const SW_VERSION = 'invo-2026-04-02d';
-const CACHE_STATIC = SW_VERSION + '-static';
+/** Nom du cache statique — incrémenter (ex. invo-v3) pour invalider tout le précache. */
+const CACHE_NAME = 'invo-v3';
 
 // ── Ressources locales à pré-cacher au install (shell complet, 1er chargement hors-ligne) ──
-const STATIC_ASSETS = [
+// Inclut les @import de css/style.css (sinon hors-ligne les feuilles partielles ne sont pas en cache).
+const PRECACHE_ASSETS = [
   './',
   './index.html',
   './privacy.html',
   './manifest.json',
+  './sw.js',
   './icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -21,6 +23,18 @@ const STATIC_ASSETS = [
   './screenshots/screenshot-mobile.png',
   './css/fonts-plus-jakarta.css',
   './css/style.css',
+  './css/tokens.css',
+  './css/components-core.css',
+  './css/pages/layout-shell.css',
+  './css/pages/auth.css',
+  './css/pages/surfaces-doc.css',
+  './css/pages/tables-widgets.css',
+  './css/pages/app-chrome.css',
+  './css/pages/help-search-skeleton.css',
+  './css/pages/panels-charts-domain.css',
+  './css/pages/pdf-preview.css',
+  './css/pages/templates-mobile-static.css',
+  './css/pages/responsive.css',
   './assets/fonts/plus-jakarta-sans/files/plus-jakarta-sans-latin-300-normal.woff2',
   './assets/fonts/plus-jakarta-sans/files/plus-jakarta-sans-latin-400-normal.woff2',
   './assets/fonts/plus-jakarta-sans/files/plus-jakarta-sans-latin-500-normal.woff2',
@@ -55,8 +69,12 @@ const STATIC_ASSETS = [
   './js/bons-commande.js',
   './js/app.js',
   './js/events.js',
+  './js/page-templates.js',
   './sw-register.js',
 ];
+
+// FETCH (same-origin) : Cache First = shell + assets statiques listés ci-dessus / dérivés (js, css, fonts, images).
+// Network First = tout le reste (ex. futures routes JSON/API ou fichiers non reconnus comme statiques).
 
 /** PWA store / marketing uniquement — échec = avertissement, pas de blocage d’installation. */
 function isOptionalPrecacheUrl(url) {
@@ -85,9 +103,9 @@ function broadcastToClients(message) {
 // ════════════════════════════════════════
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_STATIC).then(async cache => {
-      const optionalUrls = STATIC_ASSETS.filter(isOptionalPrecacheUrl);
-      const criticalUrls = STATIC_ASSETS.filter(u => !isOptionalPrecacheUrl(u));
+    caches.open(CACHE_NAME).then(async cache => {
+      const optionalUrls = PRECACHE_ASSETS.filter(isOptionalPrecacheUrl);
+      const criticalUrls = PRECACHE_ASSETS.filter(u => !isOptionalPrecacheUrl(u));
 
       const criticalOut = await Promise.all(criticalUrls.map(u => precacheOne(cache, u)));
       const criticalFailed = criticalOut.filter(r => !r.ok);
@@ -97,7 +115,7 @@ self.addEventListener('install', event => {
           '[SW] Precache critique incomplet — installation annulée (ancien service worker reste actif):',
           urls,
         );
-        await caches.delete(CACHE_STATIC);
+        await caches.delete(CACHE_NAME);
         await broadcastToClients({ type: 'SW_PRECACHE_CRITICAL_FAILED', urls });
         const err = new Error(`SW precache critical failed: ${urls.join(', ')}`);
         err.failedUrls = urls;
@@ -119,25 +137,23 @@ self.addEventListener('install', event => {
 });
 
 // ════════════════════════════════════════
-//  ACTIVATE — nettoyer les vieux caches
+//  ACTIVATE — purger les caches obsolètes, prise de contrôle immédiate
 // ════════════════════════════════════════
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches
-      .keys()
-      .then(cacheNames => {
-        const toDelete = cacheNames.filter(
-          name =>
-            (name.startsWith('invo-') || name.startsWith('invooffice-')) && name !== CACHE_STATIC,
-        );
-        return Promise.all(
-          toDelete.map(name => {
+    (async () => {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames.map(name => {
+          if (name !== CACHE_NAME) {
             console.log('[SW] Suppression ancien cache:', name);
             return caches.delete(name);
-          }),
-        );
-      })
-      .then(() => self.clients.claim()),
+          }
+          return Promise.resolve();
+        }),
+      );
+      await self.clients.claim();
+    })(),
   );
 });
 
@@ -153,7 +169,7 @@ self.addEventListener('fetch', event => {
 
   if (url.origin === self.location.origin) {
     if (isAppShellRequest(event.request, url)) {
-      event.respondWith(cacheFist(event.request, CACHE_STATIC));
+      event.respondWith(cacheFirst(event.request, CACHE_NAME));
     } else {
       event.respondWith(networkFirstNoCache(event.request));
     }
@@ -201,7 +217,7 @@ async function matchCachedSameOrigin(request, cacheName) {
   return null;
 }
 
-async function cacheFist(request, cacheName) {
+async function cacheFirst(request, cacheName) {
   let cached = await matchCachedSameOrigin(request, cacheName);
   if (cached) return cached;
 
@@ -209,7 +225,7 @@ async function cacheFist(request, cacheName) {
     const response = await fetch(request);
     if (response.ok) {
       const cache = await caches.open(cacheName);
-      cache.put(request, response.clone());
+      await cache.put(request, response.clone());
     }
     return response;
   } catch (err) {
@@ -230,13 +246,16 @@ async function offlineFallback(request) {
   const url = new URL(request.url);
 
   if (request.headers.get('accept')?.includes('text/html')) {
-    const cache = await caches.open(CACHE_STATIC);
+    const cache = await caches.open(CACHE_NAME);
     const indexUrl = indexHtmlAbsoluteUrl();
-    let r =
-      (await cache.match(indexUrl)) ||
-      (await cache.match(appDirectoryHref())) ||
-      (await caches.match(indexUrl)) ||
-      (await caches.match('./index.html'));
+    let r = await cache.match(request, { ignoreSearch: true });
+    if (!r) {
+      r =
+        (await cache.match(indexUrl)) ||
+        (await cache.match(appDirectoryHref())) ||
+        (await caches.match(indexUrl)) ||
+        (await caches.match('./index.html'));
+    }
     return r || new Response('', { status: 503, statusText: 'Service Unavailable' });
   }
 
@@ -261,14 +280,19 @@ function isAppShellRequest(request, url) {
   if (request.mode === 'navigate' || request.destination === 'document') return true;
 
   if (pathname === '/' || pathname.endsWith('/index.html')) return true;
-  if (pathname.endsWith('/manifest.json')) return true;
+  if (pathname.endsWith('privacy.html')) return true;
+  if (pathname.endsWith('manifest.json')) return true;
   if (pathname.endsWith('.js') || pathname.endsWith('.css') || pathname.endsWith('.svg')) return true;
   if (pathname.endsWith('.png') || pathname.endsWith('.ico')) return true;
   if (pathname.endsWith('.woff2')) return true;
-  if (pathname.includes('/js/') || pathname.includes('/css/') || pathname.includes('/icons/'))
+  if (
+    pathname.includes('/js/') ||
+    pathname.includes('/css/') ||
+    pathname.includes('/icons/') ||
+    pathname.includes('/screenshots/')
+  )
     return true;
   if (pathname.includes('/assets/')) return true;
-  if (pathname.endsWith('.json')) return true;
 
   return false;
 }

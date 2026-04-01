@@ -49,6 +49,15 @@
       .then(registration => {
         console.log('[SW] Enregistré — scope:', registration.scope);
 
+        function checkSwUpdate() {
+          registration.update().catch(() => {});
+        }
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') checkSwUpdate();
+        });
+        window.addEventListener('focus', checkSwUpdate);
+        setInterval(checkSwUpdate, 6 * 60 * 60 * 1000);
+
         // ── Détecter une nouvelle version du SW ──
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;

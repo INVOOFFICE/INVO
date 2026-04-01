@@ -14,6 +14,11 @@ const KEYS = {
   bonsCommande: 'invoo_bons_commande',
   stockMoves: 'invoo_stock_moves',
 };
+/** Version logique du schéma OPFS / données — incrémenter quand une migration est ajoutée. */
+const DB_VERSION = 1;
+/** Fichier JSON `{ "v": number }` — jamais passé par l’enveloppe STORAGE_FORMAT_MARKER. */
+const DB_VERSION_KEY = 'invoo_db_version';
+
 const STORAGE_FORMAT_VERSION = 2;
 const STORAGE_FORMAT_MARKER = 'invoo_storage_v2';
 
@@ -86,6 +91,7 @@ async function initOPFS() {
       'invoo_onboarding_done',
       'invoo_activation_v3',
       'invoo_demo_session',
+      DB_VERSION_KEY,
     ]);
     for (const k of keys) {
       try {
@@ -301,6 +307,77 @@ let DB = {
   stockMoves: [],
 };
 
+function _readDbVersionRaw() {
+  let raw = _opfsMemCache[DB_VERSION_KEY];
+  if (raw == null) {
+    try {
+      raw = localStorage.getItem(DB_VERSION_KEY);
+    } catch {
+      raw = null;
+    }
+  }
+  return raw;
+}
+
+function getStoredDbVersion() {
+  const raw = _readDbVersionRaw();
+  if (raw == null) return 0;
+  try {
+    const p = JSON.parse(raw);
+    const n = Number(p.v);
+    return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function persistDbVersion(version) {
+  const json = JSON.stringify({ v: version });
+  _opfsMemCache[DB_VERSION_KEY] = json;
+  if (_opfsReady) {
+    await opfsWrite(DB_VERSION_KEY, json);
+  } else {
+    try {
+      localStorage.setItem(DB_VERSION_KEY, json);
+    } catch (_) {}
+  }
+}
+
+/**
+ * Migrations séquentielles : exécuter `n` pour passer de la version (n-1) à n.
+ * Ajouter une fonction à chaque incrément de DB_VERSION.
+ */
+const DB_MIGRATIONS = {
+  /** v0 → v1 : introduction du suivi de version (aucune transformation de données requise). */
+  1: async () => {
+    dbg('[INVO] Migration DB 0→1 — versionnage persisté');
+  },
+};
+
+async function runDbMigrationsIfNeeded() {
+  let stored = getStoredDbVersion();
+  if (stored >= DB_VERSION) return;
+
+  while (stored < DB_VERSION) {
+    const target = stored + 1;
+    const migrate = DB_MIGRATIONS[target];
+    if (typeof migrate !== 'function') {
+      console.error(
+        `[INVO] Migration DB manquante pour la version ${target} (DB_VERSION=${DB_VERSION}).`,
+      );
+      break;
+    }
+    try {
+      await migrate();
+    } catch (e) {
+      console.error('[INVO] Échec migration DB v' + target, e);
+      break;
+    }
+    await persistDbVersion(target);
+    stored = target;
+  }
+}
+
 // Peuple DB depuis le cache mémoire OPFS (appelé après preloadOPFS)
 function _initDBFromCache() {
   DB.settings = { ...DB_DEFAULTS.settings, ...(ls(KEYS.settings) || {}) };
@@ -316,6 +393,7 @@ function _initDBFromCache() {
 async function preloadOPFS() {
   await initOPFS();
   if (!_opfsReady) {
+    await runDbMigrationsIfNeeded();
     _initDBFromCache();
     migrateDocsTvaByRateIfNeeded();
     return;
@@ -325,6 +403,7 @@ async function preloadOPFS() {
     'invoo_onboarding_done',
     'invoo_activation_v3',
     'invoo_demo_session',
+    DB_VERSION_KEY,
   ]);
   await Promise.all(
     keys.map(async k => {
@@ -332,6 +411,7 @@ async function preloadOPFS() {
       if (v !== null) _opfsMemCache[k] = v;
     }),
   );
+  await runDbMigrationsIfNeeded();
   await migrateStorageFormatIfNeeded();
   // DB peuplé ICI — après que toutes les données OPFS sont en cache
   _initDBFromCache();
