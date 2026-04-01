@@ -1,0 +1,19 @@
+# Dépendances
+node_modules/
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Secrets locaux (ne jamais committer de clés privées)
+.env
+.env.*
+*.pem
+
+# Logs
+*.log
+npm-debug.log*
