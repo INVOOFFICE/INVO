@@ -1,7 +1,7 @@
 {
   "id": "./index.html",
-  "name": "INVOO OFFICE — Facturation DGI Maroc",
-  "short_name": "INVOO",
+  "name": "INVOOFFICE — Facturation DGI Maroc",
+  "short_name": "INVOOFFICE",
   "description": "Application de facturation 100% conforme DGI Maroc. Fonctionne hors-ligne.",
   "start_url": "./index.html",
   "scope": "./",

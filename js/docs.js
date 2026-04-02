@@ -1,6 +1,34 @@
 // ═══════════════════════════════════════════
 //  docs.js  —  Documents, lignes, DGI, historique
 // ═══════════════════════════════════════════
+//
+//  INDEX — fonctions & entrées principales (navigation rapide)
+//  ───────────────────────────────────────────────────────────
+//  Référence & numérotation : maxSeqFromExistingRefs, parseDocRefNum,
+//    docRefExistsGlobally, getNextRef, syncSeqCounterFromDocs,
+//    applyUniqueSequentialRef, updateDocRef, bumpSeq
+//  Avoir / document source : syncAvoirSourceMetaFromContext,
+//    refreshDocSourceHint
+//  Statuts & liste déroulante doc : updateDocStatus, initDocLines
+//  Lignes de document : addLine, removeLine, getLineTTC, getLineUnitTTC,
+//    setLineFromUnitTTC, renderDocLines, updateLineTotal, updLine
+//  Montants, TVA, arrêté : nombreEnLettres, calcTotals, renderTVABreakdown,
+//    refreshAutoEntrepreneurDocUI, getTotals
+//  Persistance & PDF : saveDoc, saveAndDownloadPDF, showPostSaveActions,
+//    closePostSaveBar
+//  Formulaire génération : populateDocClient, onClientChange,
+//    syncGenerateFromSettings, validateICEInput, runDGICheck
+//  Historique & CRUD doc : editDocFromHistory,
+//    createAvoirFromCancelledFacture, populateHistClientFilter,
+//    getHistFiltered, openConvertModal, updateConvDateField, confirmConvert,
+//    showConvertSuccessBar, renderHistory, quickChangeStatus, cancelDoc,
+//    resetHistFilters, deleteDoc, duplicateDoc, exportHistXLSX,
+//    sendDocWhatsApp, _normalizePhoneForWhatsApp
+//  Rapports fiscaux : showSalesReport, accumulateDocTvaByRateForReport,
+//    _setReportsSkeletonLoading, _repDocYmd, _repCutoffYmd, setRepPeriod,
+//    renderReports
+//
+// ═══════════════════════════════════════════
 
 // ── Référence document (séquence stricte ; comptabilise tous les documents, y compris Annulé) ──
 // ═══════════════════════════════════════════════════════════════════════════════════════════

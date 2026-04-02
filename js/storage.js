@@ -344,8 +344,22 @@ async function persistDbVersion(version) {
 }
 
 /**
+ * DB_MIGRATIONS — chaîne de migrations du schéma logique (`invoo_db_version`, { v }).
+ *
+ * Règle obligatoire : toute évolution de schéma (champs requis sur entités,
+ * renommage, normalisation des fichiers OPFS, etc.) impose :
+ *   1. Incrémenter `DB_VERSION` (constante plus haut dans ce fichier).
+ *   2. Ajouter une entrée ici : clé = entier `n` (version cible), valeur = fonction
+ *      `async` qui transforme les données pour passer de la version `(n - 1)` à `n`.
+ *      L’ordre d’exécution est séquentiel : 1, 2, … jusqu’à `DB_VERSION`.
+ *   3. Couvrir le comportement par un test dans `tests/` (régression ou jeu de
+ *      données représentatif après migration).
+ *
+ * Invariant : pour chaque entier `k` tel que `1 <= k <= DB_VERSION`, une entrée
+ * `DB_MIGRATIONS[k]` (fonction) doit exister. Sinon `runDbMigrationsIfNeeded`
+ * journalise une erreur et interrompt la montée de version.
+ *
  * Migrations séquentielles : exécuter `n` pour passer de la version (n-1) à n.
- * Ajouter une fonction à chaque incrément de DB_VERSION.
  */
 const DB_MIGRATIONS = {
   /** v0 → v1 : introduction du suivi de version (aucune transformation de données requise). */

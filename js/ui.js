@@ -1,6 +1,34 @@
 // ═══════════════════════════════════════════
 //  ui.js  —  Interface, affichage, modals, charts
 // ═══════════════════════════════════════════
+//
+//  INDEX — fonctions & entrées principales (navigation rapide)
+//  ───────────────────────────────────────────────────────────
+//  Devise / TVA / formats : CUR, isAutoEntrepreneurVAT,
+//    docIsAutoEntrepreneurExempt, fmtNum, fmt, today, yyyy, pad
+//  Pagination listes (clients, stock) : getListPageSlice,
+//    updateListPaginationUI
+//  Footer / marque : invoFooterTaglineHtml, renderInvoSidebarFooterTagline
+//  Recherche surlignée : highlightQuery
+//  Toast & modales : toast, openModal, closeModal,
+//    confirmMessageToPlainText, showConfirm, _confirmOk, _confirmCancel
+//  Spinner PDF : showPdfSpinner, hidePdfSpinner, setPdfSpinnerStep
+//  Navigation & chrome : sbItem, nav, toggleSidebar, openMobSidebar,
+//    closeMobSidebar, toggleTheme, openWhatsApp
+//  Selects thématiques : initThemedSelects, refreshThemedSelect
+//  Graphiques (Chart.js) : makeAreaChart, makeDonutChart, makeBarChart
+//  Boot & overview : init, setOvPeriod, getOvMonths, _setSkeletonLoading,
+//    renderOverview, renderOvCAChart, renderOvStatusChart,
+//    renderOvTopClients, renderOvTVA, renderOvAlerts
+//  Recherche globale (⌘K) : globalKeyHandler, _getSearchFocusableEls,
+//    _searchTrapFocus, openSearch, closeSearch, searchKeyNav,
+//    _renderSearchQuickActions, renderSearchResults
+//  Notifications : buildNotifications, updateNotifBadge, toggleNotifPanel,
+//    renderNotifList, notifClick, markAllRead
+//  Onboarding : checkOnboarding, renderObStep, obNext, skipOnboarding,
+//    finishOnboarding
+//
+// ═══════════════════════════════════════════
 
 // ── Format helpers ──
 // ═══════════════════════════════════════════

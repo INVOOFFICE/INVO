@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════
 
 /** Nom du cache statique — incrémenter (ex. invo-v3) pour invalider tout le précache. */
-const CACHE_NAME = 'invo-v3';
+const CACHE_NAME = 'invo-v7';
 
 // ── Ressources locales à pré-cacher au install (shell complet, 1er chargement hors-ligne) ──
 // Inclut les @import de css/style.css (sinon hors-ligne les feuilles partielles ne sont pas en cache).

@@ -541,7 +541,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.querySelectorAll('[data-band-color]').forEach(swatch => {
-    swatch.addEventListener('click', () => setBandColor(swatch.dataset.bandColor));
+    const apply = () => setBandColor(swatch.dataset.bandColor);
+    swatch.addEventListener('click', apply);
+    swatch.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        apply();
+      }
+    });
   });
   document
     .getElementById('s-band-color')
