@@ -67,6 +67,8 @@ function syncLogoSettingsUI() {
     range.value = String(clampLogoDocHeight(s.logoHeightPx));
     if (label) label.textContent = range.value;
   }
+  const sci = document.getElementById('s-pdf-show-company-with-logo');
+  if (sci) sci.checked = s.pdfShowCompanyInfoWithLogo !== false;
   if (img && ph) {
     if (s.logoData) {
       img.src = s.logoData;
@@ -150,6 +152,8 @@ function saveSettings() {
   });
   const lh = document.getElementById('s-logo-height');
   if (lh) s.logoHeightPx = clampLogoDocHeight(lh.value);
+  const sci = document.getElementById('s-pdf-show-company-with-logo');
+  if (sci) s.pdfShowCompanyInfoWithLogo = !!sci.checked;
   const scEl = document.getElementById('s-currency');
   const stvaEl = document.getElementById('s-tva');
   if (scEl && scEl.value) s.currency = scEl.value;
@@ -340,6 +344,12 @@ function _validateBackupSettings(settings) {
     if (k === 'logoHeightPx' && (n < LOGO_DOC_HEIGHT_MIN || n > LOGO_DOC_HEIGHT_MAX))
       return `settings.logoHeightPx doit être entre ${LOGO_DOC_HEIGHT_MIN} et ${LOGO_DOC_HEIGHT_MAX}`;
   }
+  if (
+    settings.pdfShowCompanyInfoWithLogo != null &&
+    typeof settings.pdfShowCompanyInfoWithLogo !== 'boolean'
+  ) {
+    return 'settings.pdfShowCompanyInfoWithLogo doit être un booléen';
+  }
   if (settings.backupMonthlyDay != null) {
     const day = Number(settings.backupMonthlyDay);
     if (day < 0 || day > 31) return 'settings.backupMonthlyDay doit être entre 0 et 31';
@@ -492,6 +502,7 @@ async function clearAllData() {
     color: '#1a6b3c',
     logoData: '',
     logoHeightPx: 48,
+    pdfShowCompanyInfoWithLogo: true,
     backupMonthlyDay: 0,
     lastMonthlyBackupPromptDate: '',
   };

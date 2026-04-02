@@ -102,6 +102,7 @@ function previewDoc() {
   // Sync color picker & template tabs in modal
   document.getElementById('preview-band-color').value = APP.pdfPreview.color;
   syncPreviewLogoHeightControls();
+  syncPreviewCompanyInfoControl();
   document.getElementById('preview-pdf-subtitle').textContent =
     APP.pdfPreview.doc.ref +
     ' — ' +
@@ -125,6 +126,21 @@ function syncPreviewLogoHeightControls() {
         })();
   if (plh) plh.value = String(h);
   if (plhv) plhv.textContent = String(h);
+}
+
+/** Case « infos entreprise + logo » (aperçu) ← valeur enregistrée */
+function syncPreviewCompanyInfoControl() {
+  const cb = document.getElementById('preview-show-company-with-logo');
+  if (cb) cb.checked = DB.settings.pdfShowCompanyInfoWithLogo !== false;
+}
+
+function applyPreviewCompanyInfoFromControl() {
+  const cb = document.getElementById('preview-show-company-with-logo');
+  if (!cb) return;
+  DB.settings.pdfShowCompanyInfoWithLogo = !!cb.checked;
+  const sCb = document.getElementById('s-pdf-show-company-with-logo');
+  if (sCb) sCb.checked = !!cb.checked;
+  renderPreviewIframe();
 }
 
 /** Ajustement live du logo depuis la modale d’aperçu : met à jour les paramètres et l’iframe */
@@ -195,18 +211,6 @@ function syncPreviewTplTabs(tpl) {
 function refreshPreview() {
   APP.pdfPreview.color = document.getElementById('preview-band-color').value;
   renderPreviewIframe();
-}
-
-function printCurrentPreview() {
-  const html = buildInvoiceHTML(APP.pdfPreview.doc, APP.pdfPreview.tpl, APP.pdfPreview.color);
-  const win = window.open('', '_blank');
-  if (!win) {
-    toast('Popup bloqué — autorisez les popups pour ce site puis réessayez', 'err');
-    return;
-  }
-  win.document.write(html);
-  win.document.close();
-  setTimeout(() => win.print(), 500);
 }
 
 async function downloadDocPDF() {
@@ -580,6 +584,7 @@ function buildInvoiceHTML(doc, tpl, bandColor) {
         }))
       : [],
   };
+  const showCompanyInfo = s0.pdfShowCompanyInfoWithLogo !== false;
   const logoH =
     typeof clampLogoDocHeight === 'function'
       ? clampLogoDocHeight(s.logoHeightPx)
@@ -614,16 +619,33 @@ function buildInvoiceHTML(doc, tpl, bandColor) {
       : '';
 
   function _buildHeaderHTML() {
-    // Header variants
+    const companyLight = showCompanyInfo
+      ? `<div style="font-size:20px;font-weight:800;color:#111;letter-spacing:-.5px">${s.name || 'Votre Entreprise'}</div>
+            <div style="font-size:11px;color:#555;margin-top:3px">${[s.address, s.city].filter(Boolean).join(' — ')}</div>
+            <div style="font-size:11px;color:#555">${[s.phone, s.email].filter(Boolean).join(' · ')}</div>`
+      : '';
+    const companyBand = showCompanyInfo
+      ? `<div style="font-size:18px;font-weight:800;color:#fff">${s.name || 'Votre Entreprise'}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:3px">${[s.address, s.city].filter(Boolean).join(' · ')}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.75)">${[s.phone, s.email].filter(Boolean).join(' · ')}</div>`
+      : '';
+    const companyExec = showCompanyInfo
+      ? `<div style="font-size:19px;font-weight:800;color:#fff">${s.name || 'Votre Entreprise'}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.8);margin-top:2px">${[s.address, s.city].filter(Boolean).join(' · ')}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.8)">${[s.phone, s.email].filter(Boolean).join(' · ')}</div>`
+      : '';
+
     if (tpl === 'minimal') {
+      const minLeftStyle =
+        !showCompanyInfo && s.logoData
+          ? 'vertical-align:middle;text-align:center;'
+          : 'vertical-align:top;';
       return `
       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:18px;padding-bottom:14px">
         <tr>
-          <td style="vertical-align:top">
+          <td style="${minLeftStyle}">
             ${s.logoData ? `<img src="${s.logoData}" alt="" class="invoice-logo" style="margin-bottom:6px">` : ''}
-            <div style="font-size:20px;font-weight:800;color:#111;letter-spacing:-.5px">${s.name || 'Votre Entreprise'}</div>
-            <div style="font-size:11px;color:#555;margin-top:3px">${[s.address, s.city].filter(Boolean).join(' — ')}</div>
-            <div style="font-size:11px;color:#555">${[s.phone, s.email].filter(Boolean).join(' · ')}</div>
+            ${companyLight}
           </td>
           <td style="text-align:right;vertical-align:top">
             <div style="font-size:28px;font-weight:900;color:${bc};letter-spacing:-1px">${typeLabel}</div>
@@ -636,14 +658,13 @@ function buildInvoiceHTML(doc, tpl, bandColor) {
     }
 
     if (tpl === 'modern') {
+      const modLeftExtra = !showCompanyInfo && s.logoData ? 'text-align:center;' : '';
       return `
       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:0">
         <tr>
-          <td style="background:${bc};padding:18px 22px;border-radius:8px 0 0 8px;vertical-align:middle;width:60%">
+          <td style="background:${bc};padding:18px 22px;border-radius:8px 0 0 8px;vertical-align:middle;width:60%;${modLeftExtra}">
             ${s.logoData ? `<img src="${s.logoData}" alt="" class="invoice-logo" style="margin-bottom:6px">` : ''}
-            <div style="font-size:18px;font-weight:800;color:#fff">${s.name || 'Votre Entreprise'}</div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:3px">${[s.address, s.city].filter(Boolean).join(' · ')}</div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.75)">${[s.phone, s.email].filter(Boolean).join(' · ')}</div>
+            ${companyBand}
           </td>
           <td style="background:${shadeColor(bc, -40)};padding:18px 22px;border-radius:0 8px 8px 0;text-align:right;vertical-align:middle">
             <div style="font-size:24px;font-weight:900;color:#fff;letter-spacing:-1px">${typeLabel}</div>
@@ -658,12 +679,15 @@ function buildInvoiceHTML(doc, tpl, bandColor) {
 
     if (tpl === 'executive') {
       const grad = `linear-gradient(135deg,${bc},${shadeColor(bc, -30)})`;
+      const execLeft =
+        !showCompanyInfo && s.logoData
+          ? 'display:flex;flex-direction:column;align-items:center;text-align:center;'
+          : '';
       return `
       <div style="background:${grad};border-radius:8px;padding:20px 24px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center">
-        <div>
+        <div style="${execLeft}">
           ${s.logoData ? `<img src="${s.logoData}" alt="" class="invoice-logo" style="margin-bottom:8px">` : ''}
-          <div style="font-size:19px;font-weight:800;color:#fff">${s.name || 'Votre Entreprise'}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.8);margin-top:2px">${[s.address, s.city, s.phone].filter(Boolean).join(' · ')}</div>
+          ${companyExec}
         </div>
         <div style="text-align:right">
           <div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-1px;text-shadow:0 2px 8px rgba(0,0,0,0.2)">${typeLabel}</div>
@@ -674,14 +698,15 @@ function buildInvoiceHTML(doc, tpl, bandColor) {
       </div>`;
     }
 
-    // classic
+    const classicLeft =
+      !showCompanyInfo && s.logoData
+        ? 'display:flex;flex-direction:column;align-items:center;text-align:center;'
+        : '';
     return `
       <div style="background:${bc};padding:16px 22px;border-radius:4px 4px 0 0;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
-        <div>
+        <div style="${classicLeft}">
           ${s.logoData ? `<img src="${s.logoData}" alt="" class="invoice-logo" style="margin-bottom:6px">` : ''}
-          <div style="font-size:18px;font-weight:800;color:#fff">${s.name || 'Votre Entreprise'}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.8);margin-top:2px">${[s.address, s.city].filter(Boolean).join(' · ')}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.8)">${[s.phone, s.email].filter(Boolean).join(' · ')}</div>
+          ${companyBand}
         </div>
         <div style="text-align:right">
           <div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-1px">${typeLabel}</div>

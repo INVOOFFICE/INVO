@@ -636,10 +636,6 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
         Télécharger PDF
       </button>
-      <button class="btn btn-primary pdf-preview-btn-print pdf-preview-btn-inline" id="btn-print-preview">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-        Imprimer
-      </button>
       <button type="button" class="modal-close" id="btn-close-preview" aria-label="Fermer l’aperçu"><span aria-hidden="true">✕</span></button>
     </div>
     <!-- Template selector strip -->
@@ -659,6 +655,12 @@
       <input type="range" id="preview-logo-height" min="24" max="120" step="1" value="48" class="pdf-preview-logo-range" oninput="var t=document.getElementById('preview-logo-height-val');if(t)t.textContent=this.value">
       <span id="preview-logo-height-val" class="pdf-preview-logo-val">48</span>
       <span class="pdf-preview-logo-unit">px</span>
+      <div class="pdf-preview-sep"></div>
+      <label class="ui-toggle pdf-preview-strip-toggle" for="preview-show-company-with-logo">
+        <input type="checkbox" id="preview-show-company-with-logo" class="ui-toggle-input" role="switch" checked>
+        <span class="ui-toggle-track" aria-hidden="true"></span>
+        <span class="pdf-preview-strip-toggle-text">Afficher les informations de l’entreprise avec le logo</span>
+      </label>
       <div class="pdf-preview-spacer"></div>
       <span class="pdf-preview-tpl-label" id="preview-tpl-label">Template : Classic</span>
     </div>

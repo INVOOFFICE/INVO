@@ -285,6 +285,7 @@ const DB_DEFAULTS = {
     color: '#1a6b3c',
     logoData: '',
     logoHeightPx: 48,
+    pdfShowCompanyInfoWithLogo: true,
     backupMonthlyDay: 0,
     lastMonthlyBackupPromptDate: '',
   },

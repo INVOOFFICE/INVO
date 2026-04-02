@@ -112,4 +112,23 @@ function loadPdfContext(overrides = {}) {
   assert.ok(html.includes(okData));
 }
 
+// 4) pdfShowCompanyInfoWithLogo désactivé : pas de nom d’entreprise dans le bandeau (logo seul).
+{
+  const okData = 'data:image/png;base64,AAAA';
+  const ctx = loadPdfContext({
+    DB: {
+      settings: {
+        name: 'ACME Corp',
+        logoData: okData,
+        pdfShowCompanyInfoWithLogo: false,
+      },
+    },
+  });
+  const doc = { type: 'F', ref: 'F-4', date: '2026-03-31', lines: [], ht: 0, tva: 0, ttc: 0 };
+  const html = ctx.buildInvoiceHTML(doc, 'classic', '#1a6b3c');
+  assert.ok(html.includes(okData));
+  // Bandeau sans texte : le nom reste dans le bloc « Émetteur », pas en double avec l’en-tête.
+  assert.equal((html.match(/ACME Corp/g) || []).length, 1);
+}
+
 console.log('OK — tests pdf-sanitize');
