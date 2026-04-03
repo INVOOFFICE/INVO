@@ -338,6 +338,20 @@
   margin-top: 10px;
   line-height: 1.5;
 }
+.settings-pdf-company-with-logo {
+  margin-top: 16px;
+  max-width: 520px;
+}
+.settings-pdf-toggle {
+  align-items: flex-start;
+}
+.settings-pdf-toggle-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+  padding-top: 1px;
+}
 .settings-template-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

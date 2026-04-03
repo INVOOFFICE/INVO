@@ -571,6 +571,14 @@ function templatePageSettings() {
         </div>
         <p class="settings-logo-height-help">La largeur s’ajuste automatiquement pour conserver les proportions. À l’enregistrement, l’image est limitée à <strong>400 px</strong> de hauteur maximum (qualité et poids du fichier). Cliquez sur <strong>Enregistrer les paramètres</strong> pour appliquer la hauteur du logo aux PDF.</p>
       </div>
+      <div class="form-group settings-pdf-company-with-logo">
+        <label class="ui-toggle settings-pdf-toggle" for="s-pdf-show-company-with-logo">
+          <input type="checkbox" id="s-pdf-show-company-with-logo" class="ui-toggle-input" role="switch" checked>
+          <span class="ui-toggle-track" aria-hidden="true"></span>
+          <span class="settings-pdf-toggle-text">Afficher les informations de l’entreprise avec le logo</span>
+        </label>
+        <p class="settings-logo-height-help">Désactivé : seul le logo apparaît dans le bandeau d’en-tête des PDF (nom, adresse, téléphone et e-mail sont masqués dans ce bandeau — le bloc « Émetteur » en dessous reste inchangé).</p>
+      </div>
     </div>
   </div>
 

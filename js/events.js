@@ -335,7 +335,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document
     .getElementById('btn-close-preview')
     ?.addEventListener('click', () => closeModal('modal-preview-pdf'));
-  document.getElementById('btn-print-preview')?.addEventListener('click', printCurrentPreview);
   document.getElementById('btn-dl-preview')?.addEventListener('click', saveAndDownloadPDF);
   const _pvBand = document.getElementById('preview-band-color');
   _pvBand?.addEventListener('input', refreshPreview);
@@ -347,6 +346,13 @@ document.addEventListener('DOMContentLoaded', () => {
       applyPreviewLogoHeightFromControl();
   });
   _pvLogo?.addEventListener('change', () => {
+    save('settings');
+  });
+
+  const _pvCo = document.getElementById('preview-show-company-with-logo');
+  _pvCo?.addEventListener('change', () => {
+    if (typeof applyPreviewCompanyInfoFromControl === 'function')
+      applyPreviewCompanyInfoFromControl();
     save('settings');
   });
 
