@@ -11,7 +11,8 @@
 //    refreshDocSourceHint
 //  Statuts & liste déroulante doc : updateDocStatus, initDocLines
 //  Lignes de document : addLine, removeLine, getLineTTC, getLineUnitTTC,
-//    setLineFromUnitTTC, renderDocLines, updateLineTotal, updLine
+//    setLineFromUnitTTC, getDisplayedUnitPrice, applyUserUnitPriceInput,
+//    renderDocLines, updateLineTotal, updLine
 //  Montants, TVA, arrêté : nombreEnLettres, calcTotals, renderTVABreakdown,
 //    refreshAutoEntrepreneurDocUI, getTotals
 //  Persistance & PDF : saveDoc, saveAndDownloadPDF, showPostSaveActions,
@@ -241,10 +242,11 @@ function initDocLines() {
   runDGICheck();
   refreshDocSourceHint();
   if (typeof refreshThemedSelect === 'function') {
-    ['doc-type', 'doc-status', 'doc-client', 'doc-terms', 'doc-payment'].forEach(
+    ['doc-type', 'doc-status', 'doc-client', 'doc-terms', 'doc-payment', 'doc-price-mode'].forEach(
       refreshThemedSelect,
     );
   }
+  initDocPriceModeForNewDoc();
 }
 
 // ── Ajouter ligne ──
@@ -265,7 +267,7 @@ function addLine(article = null) {
         fromStock: article.id,
       }
     : { id, name: '', qty: 1, price: 0, tva: defaultTva, fromStock: null };
-  // Le prix de vente stock est saisi en TTC : on convertit vers HT pour le moteur de calcul document.
+  // Catalogue stock : prix de vente article.sell en TTC → toujours converti en PU HT (line.price).
   if (article) setLineFromUnitTTC(line, article.sell || 0);
   APP.docLines.push(line);
   renderDocLines();
@@ -304,6 +306,79 @@ function setLineFromUnitTTC(line, unitTTC) {
   const denom = 1 + rate / 100;
   const ttc = Number(unitTTC) || 0;
   line.price = denom > 0 ? ttc / denom : 0;
+}
+
+/**
+ * PU affiché dans le champ « Prix U » selon le mode document / global (TTC ou HT).
+ * Stockage interne inchangé : line.price reste toujours HT.
+ */
+function getDisplayedUnitPrice(line) {
+  if (typeof getEffectiveDocPriceMode === 'function' && getEffectiveDocPriceMode() === 'HT') {
+    return Number(line?.price || 0);
+  }
+  return getLineUnitTTC(line);
+}
+
+/**
+ * Interprète la saisie utilisateur du PU selon le mode (TTC → conversion, HT → stockage direct).
+ */
+function applyUserUnitPriceInput(line, rawStr) {
+  const v = parseFloat(rawStr) || 0;
+  if (typeof getEffectiveDocPriceMode === 'function' && getEffectiveDocPriceMode() === 'HT') {
+    line.price = v;
+  } else {
+    setLineFromUnitTTC(line, v);
+  }
+}
+
+function refreshDocPriceModeLabels() {
+  const ht = typeof getEffectiveDocPriceMode === 'function' && getEffectiveDocPriceMode() === 'HT';
+  const label = ht ? 'Prix U (HT)' : 'Prix U (TTC)';
+  const head = document.getElementById('doc-inv-head-price');
+  if (head) head.textContent = label;
+  document.querySelectorAll('.inv-line .inv-cell-price .inv-mini-label').forEach(el => {
+    el.textContent = label;
+  });
+}
+
+function refreshAllDocLinePriceInputs() {
+  (APP.docLines || []).forEach(l => {
+    const row = document.getElementById('line-' + l.id);
+    const inp = row?.querySelector('input[data-line-field="price"]');
+    if (inp) inp.value = l.price ? String(getDisplayedUnitPrice(l)) : '';
+  });
+}
+
+/** Synchronise APP.docPriceMode depuis le select document (bonus : mode par document). */
+function syncDocPriceModeFromSelect() {
+  const sel = document.getElementById('doc-price-mode');
+  if (!sel) return;
+  const m =
+    typeof normalizePriceMode === 'function' ? normalizePriceMode(sel.value) : null;
+  APP.docPriceMode = m || (typeof getGlobalPriceMode === 'function' ? getGlobalPriceMode() : 'TTC');
+}
+
+function initDocPriceModeForNewDoc() {
+  APP.docPriceMode = typeof getGlobalPriceMode === 'function' ? getGlobalPriceMode() : 'TTC';
+  const sel = document.getElementById('doc-price-mode');
+  if (sel) sel.value = APP.docPriceMode;
+  refreshDocPriceModeLabels();
+}
+
+function loadDocPriceModeFromSaved(d) {
+  const fromDoc =
+    d && typeof normalizePriceMode === 'function' ? normalizePriceMode(d.priceMode) : null;
+  APP.docPriceMode = fromDoc || (typeof getGlobalPriceMode === 'function' ? getGlobalPriceMode() : 'TTC');
+  const sel = document.getElementById('doc-price-mode');
+  if (sel) sel.value = APP.docPriceMode;
+  refreshDocPriceModeLabels();
+}
+
+/** Changement du mode sur le document : réaffiche les PU sans altérer line.price (HT). */
+function onDocPriceModeChange() {
+  syncDocPriceModeFromSelect();
+  refreshDocPriceModeLabels();
+  refreshAllDocLinePriceInputs();
 }
 
 // ── Render lignes (autocomplete) ──
@@ -358,13 +433,11 @@ function renderDocLines() {
       l.name = a.name;
       l.tva = ae ? 0 : a.tva != null ? a.tva : parseInt(DB.settings.tva, 10) || 20;
       l.fromStock = a.id;
-      // Le prix de vente stock est TTC -> conversion interne HT
       setLineFromUnitTTC(l, a.sell || 0);
       name.value = a.name;
       const priceInput = row.querySelector('input[data-line-field="price"]');
       const qtyInput = row.querySelector('input[data-line-field="qty"]');
-      // L'input "Prix U" affiche le PU TTC
-      if (priceInput) priceInput.value = l.price ? String(getLineUnitTTC(l)) : '';
+      if (priceInput) priceInput.value = l.price ? String(getDisplayedUnitPrice(l)) : '';
       if (qtyInput) qtyInput.value = l.qty;
       const s = row.querySelector('select');
       if (s) s.value = String(l.tva);
@@ -498,22 +571,25 @@ function renderDocLines() {
     acWrap.appendChild(dropdown);
     row.appendChild(makeCell('Désignation', acWrap, 'inv-cell-name'));
 
+    const priceLabel =
+      typeof getEffectiveDocPriceMode === 'function' && getEffectiveDocPriceMode() === 'HT'
+        ? 'Prix U (HT)'
+        : 'Prix U (TTC)';
+
     const price = document.createElement('input');
     price.type = 'text';
     price.inputMode = 'decimal';
-    price.value = l.price ? String(getLineUnitTTC(l)) : '';
+    price.value = l.price ? String(getDisplayedUnitPrice(l)) : '';
     price.dataset.lineField = 'price';
-    // L'utilisateur saisit le PU TTC : on convertit en PU HT (line.price) pour que le reste du code continue à utiliser HT.
     price.addEventListener('input', e => {
-      const unitTTC = parseFloat(e.target.value) || 0;
-      setLineFromUnitTTC(l, unitTTC);
+      applyUserUnitPriceInput(l, e.target.value);
       updateLineTotal(l);
       calcTotals();
     });
     price.addEventListener('blur', e => {
       if (e.target.value === '' || e.target.value === '0') e.target.value = '';
     });
-    row.appendChild(makeCell('Prix U', price, 'inv-cell-price'));
+    row.appendChild(makeCell(priceLabel, price, 'inv-cell-price'));
 
     const qty = document.createElement('input');
     qty.type = 'text';
@@ -556,11 +632,14 @@ function renderDocLines() {
       sel.appendChild(opt);
     });
     sel.addEventListener('change', e => {
-      // Pour conserver le comportement "Prix Unitaire TTC saisi", on recalcule le PU HT à partir de la valeur actuelle de l'input.
       l.tva = parseInt(e.target.value, 10);
-      const unitTTCInput = row.querySelector('input[data-line-field="price"]');
-      const unitTTC = parseFloat(unitTTCInput?.value) || 0;
-      setLineFromUnitTTC(l, unitTTC);
+      const unitInput = row.querySelector('input[data-line-field="price"]');
+      const raw = parseFloat(unitInput?.value) || 0;
+      if (typeof getEffectiveDocPriceMode === 'function' && getEffectiveDocPriceMode() === 'HT') {
+        l.price = raw;
+      } else {
+        setLineFromUnitTTC(l, raw);
+      }
       updateLineTotal(l);
       calcTotals();
     });
@@ -576,6 +655,7 @@ function renderDocLines() {
     if (rows[idx]) c.insertBefore(row, rows[idx]);
     else c.appendChild(row);
   });
+  refreshDocPriceModeLabels();
   if (typeof refreshAutoEntrepreneurDocUI === 'function') refreshAutoEntrepreneurDocUI();
   runDGICheck();
 }
@@ -594,7 +674,8 @@ function updateLineTotal(l) {
 function updLine(id, field, val) {
   const l = APP.docLines.find(x => x.id === id);
   if (!l) return;
-  if (field === 'qty' || field === 'price' || field === 'tva') l[field] = parseFloat(val) || 0;
+  if (field === 'price') applyUserUnitPriceInput(l, val);
+  else if (field === 'qty' || field === 'tva') l[field] = parseFloat(val) || 0;
   else l[field] = val;
   updateLineTotal(l);
   calcTotals();
@@ -911,6 +992,8 @@ async function saveDoc(opts = {}) {
   const remise = parseFloat(document.getElementById('doc-remise').value) || 0;
   const acompte = parseFloat(document.getElementById('doc-acompte').value) || 0;
 
+  syncDocPriceModeFromSelect();
+
   if (!APP.docLines.length) {
     toast('Ajoutez au moins un article', 'err');
     setDocFeedback('Ajoutez au moins un article pour sauvegarder.');
@@ -1036,6 +1119,11 @@ async function saveDoc(opts = {}) {
     sourceType,
     convertedToRef: prevDoc?.convertedToRef || '',
     convertedToId: prevDoc?.convertedToId || '',
+    priceMode:
+      typeof normalizePriceMode === 'function'
+        ? normalizePriceMode(APP.docPriceMode) ||
+          (typeof getGlobalPriceMode === 'function' ? getGlobalPriceMode() : 'TTC')
+        : 'TTC',
     lines: APP.docLines.map(l => (aeSave ? { ...l, tva: 0 } : { ...l })),
     tvaByRate: byRate,
     aeExempt: aeSave,
@@ -1490,10 +1578,11 @@ function editDocFromHistory(id) {
     populateDocClient();
     document.getElementById('doc-client').value = d.clientId || '';
     if (typeof refreshThemedSelect === 'function') {
-      ['doc-type', 'doc-status', 'doc-client', 'doc-terms', 'doc-payment'].forEach(
+      ['doc-type', 'doc-status', 'doc-client', 'doc-terms', 'doc-payment', 'doc-price-mode'].forEach(
         refreshThemedSelect,
       );
     }
+    loadDocPriceModeFromSaved(d);
     APP.docLines = (d.lines || []).map(l => ({
       ...l,
       id: l.id || 'l_' + Date.now() + Math.random(),

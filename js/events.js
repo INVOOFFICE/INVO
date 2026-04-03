@@ -138,6 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('doc-client')?.addEventListener('change', onClientChange);
   document.getElementById('doc-remise')?.addEventListener('input', calcTotals);
   document.getElementById('doc-acompte')?.addEventListener('input', calcTotals);
+  document.getElementById('doc-price-mode')?.addEventListener('change', () => {
+    if (typeof onDocPriceModeChange === 'function') onDocPriceModeChange();
+  });
 
   document.getElementById('btn-preview-doc')?.addEventListener('click', previewDoc);
   document.getElementById('btn-download-pdf')?.addEventListener('click', saveAndDownloadPDF);
@@ -454,6 +457,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ════════════════════════════════════════
   document.getElementById('btn-save-settings')?.addEventListener('click', saveSettings);
   document.getElementById('btn-cancel-settings')?.addEventListener('click', loadSettings);
+  document.getElementById('s-price-mode')?.addEventListener('change', e => {
+    if (typeof setGlobalPriceMode === 'function') setGlobalPriceMode(e.target.value);
+  });
   document
     .getElementById('btn-print-settings-preview')
     ?.addEventListener('click', printDocFromSettings);

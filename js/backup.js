@@ -106,6 +106,8 @@ function loadSettings() {
   if (sc) sc.value = s.currency || 'DH';
   const st = document.getElementById('s-tva');
   if (st) st.value = s.tva || '20';
+  const spm = document.getElementById('s-price-mode');
+  if (spm && typeof getGlobalPriceMode === 'function') spm.value = getGlobalPriceMode();
   const sf = document.getElementById('s-seq-f');
   if (sf) sf.value = s.seqF || 1;
   const sd = document.getElementById('s-seq-d');

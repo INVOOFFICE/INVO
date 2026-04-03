@@ -112,6 +112,13 @@ function templatePageGenerate() {
         <label for="doc-client">Client <span class="client-ice-pill miss client-ice-pill-hidden" id="client-ice-pill"></span></label>
         <select id="doc-client" class="themed-select"><option value="">Sélectionner un client...</option></select>
       </div>
+      <div class="form-group form-group-tight">
+        <label for="doc-price-mode">Saisie du prix unitaire</label>
+        <select id="doc-price-mode" class="themed-select" title="Affichage et saisie en TTC ou HT — le stockage interne des lignes reste en HT">
+          <option value="TTC">Prix en TTC</option>
+          <option value="HT">Prix en HT</option>
+        </select>
+      </div>
     </div>
     <div id="doc-source-hint-wrap" class="doc-source-hint-wrap">
       <div class="doc-source-hint-title"><span aria-hidden="true">↩</span> Document source de l’avoir</div>
@@ -134,7 +141,7 @@ function templatePageGenerate() {
     </div>
     <div id="doc-inv-header" class="doc-inv-header">
       <span class="doc-inv-head-label">Désignation</span>
-      <span class="doc-inv-head-label">Prix U</span>
+      <span id="doc-inv-head-price" class="doc-inv-head-label">Prix U (TTC)</span>
       <span class="doc-inv-head-label">Qté</span>
       <span class="doc-inv-head-label">Total HT</span>
       <span class="doc-inv-head-label">Total TTC</span>
@@ -505,6 +512,13 @@ function templatePageSettings() {
       </div>
       <div class="form-group settings-tva-group"><label for="s-tva">TVA par défaut</label>
         <select id="s-tva" name="settings-tva"><option value="20">20% Taux Normal</option><option value="14">14% Réduit</option><option value="10">10% Réduit</option><option value="7">7% Réduit</option><option value="0">0% — Auto-entrepreneur (exonéré TVA)</option></select>
+      </div>
+      <div class="form-group settings-price-mode-group"><label for="s-price-mode">Saisie du prix unitaire (documents)</label>
+        <select id="s-price-mode" name="settings-price-mode" title="Valeur par défaut pour les nouveaux documents ; modifiable sur chaque document">
+          <option value="TTC">Prix en TTC</option>
+          <option value="HT">Prix en HT</option>
+        </select>
+        <p class="settings-help-inline">Enregistré automatiquement. Défaut des nouveaux documents.</p>
       </div>
     </div>
   </div>
