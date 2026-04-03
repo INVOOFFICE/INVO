@@ -1,6 +1,144 @@
 // js/products.js — Stock, articles, mouvements, KPIs
 // ── Stock ──
 // ═══════════════════════════════════════════
+
+// ── Modal article : prix (affichage/saisie selon getGlobalPriceMode — stockage toujours TTC)
+// ═══════════════════════════════════════════
+
+function getArticleTvaRate(article) {
+  const def = parseInt(DB.settings?.tva, 10) || 20;
+  if (!article) return def;
+  const t = parseInt(article.tva, 10);
+  return Number.isFinite(t) && t >= 0 ? t : def;
+}
+
+/** TVA utilisée pour convertir les prix du formulaire (article en édition ou défaut). */
+function getCurrentArticleTvaForModal() {
+  if (APP.editArticleId) {
+    const a = DB.stock.find(x => String(x.id) === String(APP.editArticleId));
+    if (a) return getArticleTvaRate(a);
+  }
+  return parseInt(DB.settings?.tva, 10) || 20;
+}
+
+function formatArticlePriceForInput(n) {
+  const x = Number(n);
+  if (!Number.isFinite(x) || x === 0) return '';
+  return String(Math.round(x * 100) / 100);
+}
+
+/**
+ * Interprète la saisie des champs prix selon le mode global et retourne le montant TTC à stocker.
+ */
+function parsePriceInputToStoredTTC(raw, tvaPercent) {
+  return typeof parseGlobalModePriceInputToTTC === 'function'
+    ? parseGlobalModePriceInputToTTC(raw, tvaPercent)
+    : parseFloat(raw) || 0;
+}
+
+function updateArticlePriceHints(buyTtc, sellTtc, mode) {
+  const hb = document.getElementById('a-buy-hint');
+  const hs = document.getElementById('a-sell-hint');
+  const cur = typeof CUR === 'function' ? CUR() : 'DH';
+  const bT = parseFloat(buyTtc) || 0;
+  const sT = parseFloat(sellTtc) || 0;
+  if (mode === 'HT') {
+    if (hb) {
+      hb.hidden = bT <= 0;
+      if (!hb.hidden) hb.textContent = `≈ ${fmt(bT)} ${cur} TTC`;
+    }
+    if (hs) {
+      hs.hidden = sT <= 0;
+      if (!hs.hidden) hs.textContent = `≈ ${fmt(sT)} ${cur} TTC`;
+    }
+  } else {
+    if (hb) hb.hidden = true;
+    if (hs) hs.hidden = true;
+  }
+}
+
+/** Affiche buy/sell à partir des montants TTC stockés ; met à jour libellés et hints. */
+function fillArticlePriceFieldsFromTtc(buyTtc, sellTtc, tvaPercent) {
+  const mode = typeof getGlobalPriceMode === 'function' ? getGlobalPriceMode() : 'TTC';
+  const tva = parseInt(tvaPercent, 10) || 0;
+  const lbBuy = document.getElementById('label-a-buy');
+  const lbSell = document.getElementById('label-a-sell');
+  const suf = mode === 'HT' ? '(HT)' : '(TTC)';
+  if (lbBuy) lbBuy.textContent = `Prix d'achat ${suf}`;
+  if (lbSell) lbSell.textContent = `Prix de vente ${suf}`;
+
+  const bT = parseFloat(buyTtc) || 0;
+  const sT = parseFloat(sellTtc) || 0;
+  const buyEl = document.getElementById('a-buy');
+  const sellEl = document.getElementById('a-sell');
+  if (buyEl) {
+    const disp =
+      bT === 0
+        ? 0
+        : typeof displayTTCForGlobalMode === 'function'
+          ? displayTTCForGlobalMode(bT, tva)
+          : mode === 'HT'
+            ? convertTTCtoHT(bT, tva)
+            : bT;
+    buyEl.value = bT === 0 ? '' : formatArticlePriceForInput(disp);
+  }
+  if (sellEl) {
+    const disp =
+      sT === 0
+        ? 0
+        : typeof displayTTCForGlobalMode === 'function'
+          ? displayTTCForGlobalMode(sT, tva)
+          : mode === 'HT'
+            ? convertTTCtoHT(sT, tva)
+            : sT;
+    sellEl.value = sT === 0 ? '' : formatArticlePriceForInput(disp);
+  }
+  updateArticlePriceHints(bT, sT, mode);
+}
+
+/** Si le mode global change pendant que le modal est ouvert : conserver la sémantique (via TTC) puis réafficher. */
+function syncArticleModalAfterPriceModeChange() {
+  const tva = getCurrentArticleTvaForModal();
+  const buyTtc = parsePriceInputToStoredTTC(document.getElementById('a-buy')?.value, tva);
+  const sellTtc = parsePriceInputToStoredTTC(document.getElementById('a-sell')?.value, tva);
+  fillArticlePriceFieldsFromTtc(buyTtc, sellTtc, tva);
+  calcMarginPreview();
+}
+
+(function initArticlePriceModeSync() {
+  window.addEventListener('invo-price-mode-change', () => {
+    if (document.getElementById('modal-article')?.classList.contains('open')) syncArticleModalAfterPriceModeChange();
+    if (document.getElementById('modal-stock-picker')?.classList.contains('open')) renderStockPicker();
+  });
+  window.addEventListener('storage', e => {
+    if (e.key === 'priceMode' && document.getElementById('modal-article')?.classList.contains('open')) {
+      syncArticleModalAfterPriceModeChange();
+    }
+    if (e.key === 'priceMode' && document.getElementById('modal-stock-picker')?.classList.contains('open')) {
+      renderStockPicker();
+    }
+  });
+})();
+
+(function initStockListPriceModeSync() {
+  const refresh = () => {
+    if (document.getElementById('page-stock')?.classList.contains('active')) renderStock();
+  };
+  window.addEventListener('invo-price-mode-change', refresh);
+  window.addEventListener('storage', e => {
+    if (e.key === 'priceMode') refresh();
+  });
+})();
+
+function syncStockListPriceHeaders() {
+  const m = typeof getGlobalPriceMode === 'function' ? getGlobalPriceMode() : 'TTC';
+  const suf = m === 'HT' ? '(HT)' : '(TTC)';
+  const tb = document.getElementById('stock-th-buy');
+  const ts = document.getElementById('stock-th-sell');
+  if (tb) tb.textContent = `Prix achat ${suf}`;
+  if (ts) ts.textContent = `Prix vente ${suf}`;
+}
+
 function renderStock() {
   const search = (document.getElementById('stock-search') || {}).value || '';
   const catFilter = (document.getElementById('stock-cat-filter') || {}).value || '';
@@ -58,6 +196,7 @@ function renderStock() {
   const tbody = document.getElementById('stock-tbody');
   const empty = document.getElementById('stock-empty');
   if (!tbody) return;
+  syncStockListPriceHeaders();
   if (!items.length) {
     clearChildren(tbody);
     if (empty) empty.style.display = 'block';
@@ -77,8 +216,17 @@ function renderStock() {
   const pageRows = pg.rows;
   clearChildren(tbody);
   pageRows.forEach(a => {
-    const margin = (a.sell || 0) - (a.buy || 0);
-    const marginPct = a.buy > 0 ? ((margin / a.buy) * 100).toFixed(0) + '%' : '∞';
+    const rowTva = getArticleTvaRate(a);
+    const buyShown =
+      typeof displayTTCForGlobalMode === 'function'
+        ? displayTTCForGlobalMode(a.buy || 0, rowTva)
+        : parseFloat(a.buy) || 0;
+    const sellShown =
+      typeof displayTTCForGlobalMode === 'function'
+        ? displayTTCForGlobalMode(a.sell || 0, rowTva)
+        : parseFloat(a.sell) || 0;
+    const marginShown = sellShown - buyShown;
+    const marginPct = buyShown > 0 ? ((marginShown / buyShown) * 100).toFixed(0) + '%' : '∞';
     const qty = a.qty || 0;
     const qtyColor = qty === 0 ? 'var(--danger)' : qty < 5 ? 'var(--accent)' : 'var(--text)';
     const enc = encodeURIComponent(String(a.id || ''));
@@ -159,15 +307,15 @@ function renderStock() {
     td4.appendChild(qw);
     const td5 = document.createElement('td');
     td5.className = 'nzero';
-    td5.textContent = fmt(a.buy);
+    td5.textContent = fmt(buyShown);
     const td6 = document.createElement('td');
     td6.className = 'nzero';
     td6.style.cssText = 'color:var(--brand);font-weight:600';
-    td6.textContent = fmt(a.sell);
+    td6.textContent = fmt(sellShown);
     const td7 = document.createElement('td');
     const m1 = document.createElement('span');
-    m1.style.cssText = `font-weight:600;color:${margin >= 0 ? 'var(--brand)' : 'var(--danger)'}`;
-    m1.textContent = (margin >= 0 ? '+' : '') + fmt(margin);
+    m1.style.cssText = `font-weight:600;color:${marginShown >= 0 ? 'var(--brand)' : 'var(--danger)'}`;
+    m1.textContent = (marginShown >= 0 ? '+' : '') + fmt(marginShown);
     const m2 = document.createElement('span');
     m2.style.cssText = 'font-size:11px;color:var(--text2)';
     m2.textContent = ` (${marginPct})`;
@@ -212,10 +360,21 @@ function renderStock() {
   }
   clearChildren(mobStk);
   pageRows.forEach(a => {
-    const margin = (a.sell || 0) - (a.buy || 0);
+    const rowTvaM = getArticleTvaRate(a);
+    const buyShownM =
+      typeof displayTTCForGlobalMode === 'function'
+        ? displayTTCForGlobalMode(a.buy || 0, rowTvaM)
+        : parseFloat(a.buy) || 0;
+    const sellShownM =
+      typeof displayTTCForGlobalMode === 'function'
+        ? displayTTCForGlobalMode(a.sell || 0, rowTvaM)
+        : parseFloat(a.sell) || 0;
+    const marginShownM = sellShownM - buyShownM;
     const qty = a.qty || 0;
     const qtyColor = qty === 0 ? 'var(--danger)' : qty < 5 ? 'var(--gold)' : 'var(--teal)';
     const enc = encodeURIComponent(String(a.id || ''));
+    const pmSuf =
+      typeof getGlobalPriceMode === 'function' && getGlobalPriceMode() === 'HT' ? '(HT)' : '(TTC)';
     const card = document.createElement('div');
     card.className = 'mob-card';
     const hdr = document.createElement('div');
@@ -273,15 +432,26 @@ function renderStock() {
     rQ.appendChild(lQ);
     rQ.appendChild(vQ);
     card.appendChild(rQ);
+    const rPa = document.createElement('div');
+    rPa.className = 'mob-card-row';
+    const lA = document.createElement('span');
+    lA.className = 'mob-card-label';
+    lA.textContent = `Prix achat ${pmSuf}`;
+    const vA = document.createElement('span');
+    vA.className = 'mob-card-val';
+    vA.textContent = fmt(buyShownM);
+    rPa.appendChild(lA);
+    rPa.appendChild(vA);
+    card.appendChild(rPa);
     const rPv = document.createElement('div');
     rPv.className = 'mob-card-row';
     const lP = document.createElement('span');
     lP.className = 'mob-card-label';
-    lP.textContent = 'Prix vente';
+    lP.textContent = `Prix vente ${pmSuf}`;
     const vP = document.createElement('span');
     vP.className = 'mob-card-val';
     vP.style.color = 'var(--teal)';
-    vP.textContent = fmt(a.sell);
+    vP.textContent = fmt(sellShownM);
     rPv.appendChild(lP);
     rPv.appendChild(vP);
     card.appendChild(rPv);
@@ -292,8 +462,8 @@ function renderStock() {
     lM.textContent = 'Marge';
     const vM = document.createElement('span');
     vM.className = 'mob-card-val';
-    vM.style.color = margin >= 0 ? 'var(--teal)' : 'var(--danger)';
-    vM.textContent = (margin >= 0 ? '+' : '') + fmt(margin);
+    vM.style.color = marginShownM >= 0 ? 'var(--teal)' : 'var(--danger)';
+    vM.textContent = (marginShownM >= 0 ? '+' : '') + fmt(marginShownM);
     rMg.appendChild(lM);
     rMg.appendChild(vM);
     card.appendChild(rMg);
@@ -368,10 +538,10 @@ function openAddArticle() {
     id => (document.getElementById(id).value = ''),
   );
   document.getElementById('a-qty').value = 0;
-  document.getElementById('a-buy').value = '';
-  document.getElementById('a-sell').value = '';
   document.getElementById('margin-preview').style.display = 'none';
   populateFournisseurSelect('');
+  const tvaNew = parseInt(DB.settings?.tva, 10) || 20;
+  fillArticlePriceFieldsFromTtc(0, 0, tvaNew);
   openModal('modal-article');
 }
 function editArticle(id) {
@@ -383,16 +553,18 @@ function editArticle(id) {
   document.getElementById('a-barcode').value = a.barcode || '';
   document.getElementById('a-category').value = a.category || '';
   document.getElementById('a-qty').value = a.qty || 0;
-  document.getElementById('a-buy').value = a.buy || '';
-  document.getElementById('a-sell').value = a.sell || '';
   document.getElementById('a-desc').value = a.desc || '';
   populateFournisseurSelect(a.fournisseurId || '');
+  fillArticlePriceFieldsFromTtc(a.buy || 0, a.sell || 0, getArticleTvaRate(a));
   calcMarginPreview();
   openModal('modal-article');
 }
 function calcMarginPreview() {
-  const buy = parseFloat(document.getElementById('a-buy').value) || 0;
-  const sell = parseFloat(document.getElementById('a-sell').value) || 0;
+  const tva = getCurrentArticleTvaForModal();
+  const buy = parsePriceInputToStoredTTC(document.getElementById('a-buy')?.value, tva);
+  const sell = parsePriceInputToStoredTTC(document.getElementById('a-sell')?.value, tva);
+  const mode = typeof getGlobalPriceMode === 'function' ? getGlobalPriceMode() : 'TTC';
+  updateArticlePriceHints(buy, sell, mode);
   const prev = document.getElementById('margin-preview');
   if (sell > 0) {
     prev.style.display = 'flex';
@@ -407,16 +579,21 @@ function saveArticle() {
     return;
   }
   const fournId = document.getElementById('a-fournisseur')?.value || '';
-  const defaultTva = parseInt(DB.settings?.tva, 10) || 20;
+  const prevArticle = APP.editArticleId
+    ? DB.stock.find(x => String(x.id) === String(APP.editArticleId))
+    : null;
+  const finalTva = getArticleTvaRate(prevArticle);
+  const buyTtc = parsePriceInputToStoredTTC(document.getElementById('a-buy').value, finalTva);
+  const sellTtc = parsePriceInputToStoredTTC(document.getElementById('a-sell').value, finalTva);
   const article = {
     id: APP.editArticleId || 'art_' + Date.now(),
     name,
     barcode: normUtf8(document.getElementById('a-barcode').value.trim() || ''),
     category: normUtf8(document.getElementById('a-category').value.trim() || ''),
     qty: parseFloat(document.getElementById('a-qty').value) || 0,
-    buy: parseFloat(document.getElementById('a-buy').value) || 0,
-    sell: parseFloat(document.getElementById('a-sell').value) || 0,
-    tva: defaultTva,
+    buy: buyTtc,
+    sell: sellTtc,
+    tva: finalTva,
     desc: normUtf8(document.getElementById('a-desc').value.trim() || ''),
     fournisseurId: fournId,
     fournisseurName:
@@ -642,7 +819,15 @@ function openStockPicker() {
   renderStockPicker();
   openModal('modal-stock-picker');
 }
+function syncStockPickerPriceColumnHeader() {
+  const th = document.getElementById('picker-th-price');
+  if (!th) return;
+  const m = typeof getEffectiveDocPriceMode === 'function' ? getEffectiveDocPriceMode() : 'TTC';
+  th.textContent = m === 'HT' ? 'Prix vente (HT)' : 'Prix vente (TTC)';
+}
+
 function renderStockPicker() {
+  syncStockPickerPriceColumnHeader();
   const psEl = document.getElementById('picker-search');
   const search = (psEl?.value || '').toLowerCase().trim();
 
@@ -707,7 +892,12 @@ function renderStockPicker() {
     }
     const td3 = document.createElement('td');
     td3.style.fontFamily = 'Arial,sans-serif';
-    td3.textContent = fmt(a.sell);
+    const pTva = Number.isFinite(Number(a.tva)) ? Number(a.tva) : 20;
+    const sellShown =
+      typeof displayTTCForDocLineMode === 'function'
+        ? displayTTCForDocLineMode(a.sell || 0, pTva)
+        : a.sell || 0;
+    td3.textContent = fmt(sellShown);
     const td4 = document.createElement('td');
     td4.textContent = `${Number.isFinite(Number(a.tva)) ? Number(a.tva) : 20}%`;
     const td5 = document.createElement('td');

@@ -379,6 +379,9 @@ function onDocPriceModeChange() {
   syncDocPriceModeFromSelect();
   refreshDocPriceModeLabels();
   refreshAllDocLinePriceInputs();
+  if (document.getElementById('modal-stock-picker')?.classList.contains('open') && typeof renderStockPicker === 'function') {
+    renderStockPicker();
+  }
 }
 
 // ── Render lignes (autocomplete) ──
@@ -510,7 +513,13 @@ function renderDocLines() {
         left.appendChild(meta);
         const price = document.createElement('div');
         price.className = 'ac-price';
-        price.textContent = fmt(a.sell);
+        const aePick = typeof isAutoEntrepreneurVAT === 'function' && isAutoEntrepreneurVAT();
+        const arTva = aePick ? 0 : a.tva != null ? a.tva : parseInt(DB.settings.tva, 10) || 20;
+        const sellShown =
+          typeof displayTTCForDocLineMode === 'function'
+            ? displayTTCForDocLineMode(a.sell || 0, arTva)
+            : a.sell || 0;
+        price.textContent = fmt(sellShown);
         item.appendChild(left);
         item.appendChild(price);
         item.addEventListener('mousedown', e => {

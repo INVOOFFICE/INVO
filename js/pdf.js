@@ -68,6 +68,12 @@ function buildLiveDoc() {
   const totals = getTotals();
 
   const aeLive = typeof isAutoEntrepreneurVAT === 'function' && isAutoEntrepreneurVAT();
+  const priceModeSel = document.getElementById('doc-price-mode')?.value;
+  const priceMode =
+    (typeof window.normalizePriceMode === 'function'
+      ? window.normalizePriceMode(priceModeSel || window.APP?.docPriceMode)
+      : null) ||
+    (typeof window.getGlobalPriceMode === 'function' ? window.getGlobalPriceMode() : 'TTC');
   return {
     ref,
     type,
@@ -87,6 +93,7 @@ function buildLiveDoc() {
     tva: totals.tva,
     ttc: totals.ttc,
     aeExempt: aeLive,
+    priceMode,
   };
 }
 
@@ -573,6 +580,7 @@ function buildInvoiceHTML(doc, tpl, bandColor) {
     ttc: _safeNum(doc?.ttc, 0),
     remise: _safeNum(doc?.remise, 0),
     acompte: _safeNum(doc?.acompte, 0),
+    priceMode: doc?.priceMode,
     lines: Array.isArray(doc?.lines)
       ? doc.lines.map(l => ({
           ...l,
@@ -602,6 +610,12 @@ function buildInvoiceHTML(doc, tpl, bandColor) {
       .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   const aeDoc =
     typeof docIsAutoEntrepreneurExempt === 'function' && docIsAutoEntrepreneurExempt(doc);
+  const puInputMode =
+    typeof window.normalizePriceMode === 'function'
+      ? window.normalizePriceMode(doc?.priceMode) ||
+        (typeof window.getGlobalPriceMode === 'function' ? window.getGlobalPriceMode() : 'TTC')
+      : 'TTC';
+  const puShowUnitAsHT = puInputMode === 'HT';
   const typeLabel = _escHtml(
     { F: 'FACTURE', D: 'DEVIS', BL: 'BON DE LIVRAISON', AV: 'AVOIR' }[doc.type] ||
       doc.type ||
@@ -778,7 +792,7 @@ function buildInvoiceHTML(doc, tpl, bandColor) {
         linesHTML,
         theadRow: `
         <th style="${tableHeaderStyle}padding:9px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Désignation</th>
-        <th style="${tableHeaderStyle}padding:9px 10px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Prix unitaire</th>
+        <th style="${tableHeaderStyle}padding:9px 10px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Prix unitaire (HT)</th>
         <th style="${tableHeaderStyle}padding:9px 10px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Qté</th>
         <th style="${tableHeaderStyle}padding:9px 10px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Total</th>`,
       };
@@ -789,12 +803,13 @@ function buildInvoiceHTML(doc, tpl, bandColor) {
         const unitHT = Number(l.price || 0);
         const tvaRate = Number(l.tva || 0);
         const unitTTC = unitHT * (1 + tvaRate / 100);
+        const unitShown = puShowUnitAsHT ? unitHT : unitTTC;
         const totalHT = qty * unitHT;
         const totalTTC = totalHT * (1 + tvaRate / 100);
         return `
     <tr style="background:${i % 2 === 1 ? '#f9fafb' : '#fff'}">
       <td style="padding:8px 10px;font-size:12px;border-bottom:1px solid #f0f0f0">${l.name || '—'}${l.desc ? `<div style="font-size:10px;color:#888">${l.desc}</div>` : ''}</td>
-      <td style="padding:8px 10px;text-align:right;font-size:12px;border-bottom:1px solid #f0f0f0">${fmtN(unitTTC)} ${cur}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:12px;border-bottom:1px solid #f0f0f0">${fmtN(unitShown)} ${cur}</td>
       <td style="padding:8px 10px;text-align:center;font-size:12px;border-bottom:1px solid #f0f0f0">${qty}</td>
       <td style="padding:8px 10px;text-align:right;font-size:12px;border-bottom:1px solid #f0f0f0">${fmtN(totalHT)} ${cur}</td>
       <td style="padding:8px 10px;text-align:right;font-size:12px;font-weight:700;color:${bc};border-bottom:1px solid #f0f0f0">${fmtN(totalTTC)} ${cur}</td>
@@ -807,7 +822,7 @@ function buildInvoiceHTML(doc, tpl, bandColor) {
       linesHTML,
       theadRow: `
           <th style="${tableHeaderStyle}padding:9px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Désignation</th>
-          <th style="${tableHeaderStyle}padding:9px 10px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Prix U</th>
+          <th style="${tableHeaderStyle}padding:9px 10px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Prix U ${puShowUnitAsHT ? '(HT)' : '(TTC)'}</th>
           <th style="${tableHeaderStyle}padding:9px 10px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Qté</th>
           <th style="${tableHeaderStyle}padding:9px 10px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Total HT</th>
           <th style="${tableHeaderStyle}padding:9px 10px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Total TTC</th>

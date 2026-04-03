@@ -678,7 +678,7 @@
     <div class="modal-body">
       <div class="field-row c2"><div class="form-group"><label for="a-name">Désignation *</label><input id="a-name" name="article-name" placeholder="Nom de l'article" required></div><div class="form-group"><label for="a-barcode">Code barre</label><input id="a-barcode" name="article-barcode" placeholder="EAN-13"></div></div>
       <div class="field-row c2"><div class="form-group"><label for="a-category">Catégorie</label><input id="a-category" name="article-category" placeholder="Ex: Boissons..."></div><div class="form-group"><label for="a-qty">Quantité</label><input id="a-qty" name="article-qty" type="number" inputmode="decimal" value="0" min="0"></div></div>
-      <div class="field-row c2"><div class="form-group"><label for="a-buy">Prix d'achat TTC</label><input id="a-buy" name="article-buy" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00"></div><div class="form-group"><label for="a-sell">Prix de vente</label><input id="a-sell" name="article-sell" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00"></div></div>
+      <div class="field-row c2"><div class="form-group"><label for="a-buy" id="label-a-buy">Prix d'achat (TTC)</label><input id="a-buy" name="article-buy" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00"><div id="a-buy-hint" class="article-price-hint" hidden></div></div><div class="form-group"><label for="a-sell" id="label-a-sell">Prix de vente (TTC)</label><input id="a-sell" name="article-sell" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00"><div id="a-sell-hint" class="article-price-hint" hidden></div></div></div>
       <div class="form-group"><label for="a-desc">Description</label><textarea id="a-desc" name="article-desc" rows="2" placeholder="Description optionnelle..."></textarea></div>
       <div class="form-group"><label for="a-fournisseur">Fournisseur</label><select id="a-fournisseur" name="article-fournisseur"><option value="">— Aucun fournisseur —</option></select></div>
       <div class="alert info margin-preview-hidden" id="margin-preview">Marge: <strong id="margin-val"></strong></div>
@@ -757,7 +757,7 @@
       </div>
       <div class="tbl-wrap bc-lines-table-wrap">
         <table>
-          <thead><tr><th>Article</th><th>Qté</th><th>PU achat TTC</th><th>TVA %</th><th></th></tr></thead>
+          <thead><tr><th>Article</th><th>Qté</th><th id="bc-th-pu">PU achat (TTC)</th><th>TVA %</th><th></th></tr></thead>
           <tbody id="bc-lines-edit-tbody"></tbody>
         </table>
       </div>
@@ -795,7 +795,7 @@
       <input type="text" id="bc-picker-search" name="bc-picker-search" placeholder="🔍 Rechercher…" class="bc-picker-search" autocomplete="off">
       <div class="tbl-wrap bc-picker-table-wrap">
         <table>
-          <thead><tr><th>Article</th><th>Catégorie</th><th>Stock</th><th>P. achat TTC</th><th>TVA</th><th></th></tr></thead>
+          <thead><tr><th>Article</th><th>Catégorie</th><th>Stock</th><th id="bc-picker-th-buy">P. achat (TTC)</th><th>TVA</th><th></th></tr></thead>
           <tbody id="bc-picker-tbody"></tbody>
         </table>
       </div>
@@ -819,7 +819,7 @@
         </button>
       </div>
       <div class="tbl-wrap stock-picker-table-wrap">
-        <table><thead><tr><th>Article</th><th>Catégorie</th><th>Stock</th><th>Prix TTC</th><th>TVA</th><th></th></tr></thead>
+        <table><thead><tr><th>Article</th><th>Catégorie</th><th>Stock</th><th id="picker-th-price">Prix vente (TTC)</th><th>TVA</th><th></th></tr></thead>
         <tbody id="picker-tbody"></tbody></table>
       </div>
     </div>

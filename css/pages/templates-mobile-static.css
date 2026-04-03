@@ -954,6 +954,11 @@
 .ncq-pro-fields {
   display: none;
 }
+.article-price-hint {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 4px;
+}
 .margin-preview-hidden {
   display: none;
 }

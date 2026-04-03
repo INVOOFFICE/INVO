@@ -1287,11 +1287,17 @@ function renderSearchResults() {
     )
     .slice(0, 3)
     .forEach(a => {
+      const stva = Number.isFinite(Number(a.tva)) ? Number(a.tva) : 20;
+      const sellShown =
+        typeof displayTTCForGlobalMode === 'function'
+          ? displayTTCForGlobalMode(a.sell || 0, stva)
+          : a.sell || 0;
+      const pm = typeof getGlobalPriceMode === 'function' ? getGlobalPriceMode() : 'TTC';
       results.push({
         cat: 'Stock',
         icon: '📦',
         labelText: a.name || '',
-        sub: `${a.category || '—'} · Stock: ${a.qty || 0} · ${fmt(a.sell)} HT`,
+        sub: `${a.category || '—'} · Stock: ${a.qty || 0} · ${fmt(sellShown)} ${pm === 'HT' ? 'HT' : 'TTC'}`,
         rightLowStock: (a.qty || 0) < 5,
         action: () => {
           closeSearch();

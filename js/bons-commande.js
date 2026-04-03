@@ -13,6 +13,49 @@ const BC_STATUS = {
   cancelled: { label: 'Annulé', cls: 'bc-status-cancelled' },
 };
 
+/** unitPrice enregistré = TTC ; affichage/saisie selon getGlobalPriceMode (comme paramètre documents). */
+function syncBCPurchaseUnitColumnHeader() {
+  const th = document.getElementById('bc-th-pu');
+  if (!th) return;
+  const ht = typeof getGlobalPriceMode === 'function' && getGlobalPriceMode() === 'HT';
+  th.textContent = ht ? 'PU achat (HT)' : 'PU achat (TTC)';
+}
+
+function syncBCPickerPurchaseColumnHeader() {
+  const th = document.getElementById('bc-picker-th-buy');
+  if (!th) return;
+  const ht = typeof getGlobalPriceMode === 'function' && getGlobalPriceMode() === 'HT';
+  th.textContent = ht ? 'P. achat (HT)' : 'P. achat (TTC)';
+}
+
+function bcFormatPuInput(ttcStored, tva) {
+  const t = parseFloat(ttcStored) || 0;
+  if (t <= 0) return '';
+  const d =
+    typeof displayTTCForGlobalMode === 'function'
+      ? displayTTCForGlobalMode(t, tva)
+      : t;
+  return String(Math.round(d * 100) / 100);
+}
+
+function bcParsePuInputToTtc(raw, tva) {
+  return typeof parseGlobalModePriceInputToTTC === 'function'
+    ? parseGlobalModePriceInputToTTC(raw, tva)
+    : Math.max(0, parseFloat(raw) || 0);
+}
+
+(function _bcInitPriceModeSync() {
+  window.addEventListener('invo-price-mode-change', () => {
+    if (document.getElementById('modal-bon-commande')?.classList.contains('open')) renderBCEditLines();
+    if (document.getElementById('modal-bc-stock-picker')?.classList.contains('open')) renderBCPicker();
+  });
+  window.addEventListener('storage', e => {
+    if (e.key !== 'priceMode') return;
+    if (document.getElementById('modal-bon-commande')?.classList.contains('open')) renderBCEditLines();
+    if (document.getElementById('modal-bc-stock-picker')?.classList.contains('open')) renderBCPicker();
+  });
+})();
+
 function _bcEnsureSeq() {
   if (DB.settings.seqBCmd == null || DB.settings.seqBCmd === undefined) DB.settings.seqBCmd = 1;
 }
@@ -197,6 +240,8 @@ function renderBCEditLines() {
   const tbody = document.getElementById('bc-lines-edit-tbody');
   if (!tbody) return;
   clearChildren(tbody);
+  syncBCPurchaseUnitColumnHeader();
+
   if (!_bcDraftLines.length) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
@@ -237,7 +282,8 @@ function renderBCEditLines() {
       inP.step = 'any';
       inP.className = 'bc-inp-price';
       inP.dataset.i = String(i);
-      inP.value = String(l.unitPrice);
+      const lineTva = Math.min(100, Math.max(0, parseInt(String(l.tva), 10) || 0));
+      inP.value = bcFormatPuInput(l.unitPrice, lineTva);
       inP.style.width = '100px';
       tdP.appendChild(inP);
       const tdT = document.createElement('td');
@@ -276,15 +322,21 @@ function renderBCEditLines() {
     });
   });
   tbody.querySelectorAll('.bc-inp-price').forEach(el => {
-    el.addEventListener('change', () => {
+    const applyPu = () => {
       const i = +el.dataset.i;
-      _bcDraftLines[i].unitPrice = Math.max(0, parseFloat(el.value) || 0);
-    });
+      const line = _bcDraftLines[i];
+      if (!line) return;
+      const tva = Math.min(100, Math.max(0, parseInt(String(line.tva), 10) || 0));
+      line.unitPrice = Math.max(0, bcParsePuInputToTtc(el.value, tva));
+    };
+    el.addEventListener('input', applyPu);
+    el.addEventListener('change', applyPu);
   });
   tbody.querySelectorAll('.bc-inp-tva').forEach(el => {
     el.addEventListener('change', () => {
       const i = +el.dataset.i;
       _bcDraftLines[i].tva = Math.min(100, Math.max(0, parseInt(el.value, 10) || 0));
+      renderBCEditLines();
     });
   });
 }
@@ -340,6 +392,8 @@ function openViewBC(id) {
   const st = BC_STATUS[bc.status] || BC_STATUS.pending;
   const lines = bc.lines || [];
   const totalTtc = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unitPrice) || 0), 0);
+  const puHead =
+    typeof getGlobalPriceMode === 'function' && getGlobalPriceMode() === 'HT' ? 'PU achat (HT)' : 'PU achat (TTC)';
   const vb = document.getElementById('bc-view-body');
   if (vb) {
     clearChildren(vb);
@@ -386,7 +440,7 @@ function openViewBC(id) {
     const tbl = document.createElement('table');
     const thead = document.createElement('thead');
     const hr = document.createElement('tr');
-    ['Article', 'Qté', 'PU achat TTC', 'TVA', 'Total TTC'].forEach(t => {
+    ['Article', 'Qté', puHead, 'TVA', 'Total TTC'].forEach(t => {
       const th = document.createElement('th');
       th.textContent = t;
       hr.appendChild(th);
@@ -397,6 +451,9 @@ function openViewBC(id) {
     lines.forEach(l => {
       const q = Number(l.qty) || 0;
       const p = Number(l.unitPrice) || 0;
+      const ltva = Number(l.tva) || 20;
+      const pShown =
+        typeof displayTTCForGlobalMode === 'function' ? displayTTCForGlobalMode(p, ltva) : p;
       const tr = document.createElement('tr');
       const tdN = document.createElement('td');
       const nm = document.createElement('div');
@@ -413,7 +470,7 @@ function openViewBC(id) {
       tdQ.textContent = String(q);
       const tdP = document.createElement('td');
       tdP.style.fontFamily = 'Arial,sans-serif';
-      tdP.textContent = fmt(p);
+      tdP.textContent = fmt(pShown);
       const tdT = document.createElement('td');
       tdT.textContent = `${l.tva ?? 20}%`;
       const tdTot = document.createElement('td');
@@ -593,6 +650,7 @@ function openBCPicker() {
 }
 
 function renderBCPicker() {
+  syncBCPickerPurchaseColumnHeader();
   const search =
     (document.getElementById('bc-picker-search') || {}).value?.toLowerCase().trim() || '';
   const fournId = document.getElementById('bc-fournisseur')?.value || '';
@@ -661,7 +719,12 @@ function renderBCPicker() {
     td3.appendChild(sp);
     const td4 = document.createElement('td');
     td4.style.fontFamily = 'Arial,sans-serif';
-    td4.textContent = fmt(a.buy || 0);
+    const btva = Number.isFinite(Number(a.tva)) ? Number(a.tva) : 20;
+    const buyShown =
+      typeof displayTTCForGlobalMode === 'function'
+        ? displayTTCForGlobalMode(a.buy || 0, btva)
+        : a.buy || 0;
+    td4.textContent = fmt(buyShown);
     const td5 = document.createElement('td');
     td5.textContent = `${Number.isFinite(Number(a.tva)) ? Number(a.tva) : 20}%`;
     const td6 = document.createElement('td');

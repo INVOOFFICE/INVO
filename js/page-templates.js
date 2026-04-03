@@ -344,7 +344,7 @@ function templatePageStock() {
     <button type="button" class="btn btn-danger btn-sm" id="btn-clear-stock"><span aria-hidden="true">🗑</span> Tout supprimer</button>
   </div>
   <div class="tbl-wrap">
-    <table><thead><tr><th>Article</th><th>Code barre</th><th>Catégorie</th><th>Fournisseur</th><th>Quantité</th><th>Prix achat</th><th>Prix vente</th><th>Marge</th><th>Actions</th></tr></thead>
+    <table><thead><tr><th>Article</th><th>Code barre</th><th>Catégorie</th><th>Fournisseur</th><th>Quantité</th><th id="stock-th-buy">Prix achat (TTC)</th><th id="stock-th-sell">Prix vente (TTC)</th><th>Marge</th><th>Actions</th></tr></thead>
     <tbody id="stock-tbody"></tbody></table>
   </div>
   <div id="stock-list-pagination" class="list-pagination-wrap" aria-label="Pagination stock"></div>
