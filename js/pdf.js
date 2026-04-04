@@ -45,8 +45,14 @@ _definePdfPreviewState(
   },
 );
 
-/** Résolution html2canvas + PNG sans perte — export PDF net à l’impression */
-const PDF_HTML2CANVAS_SCALE = 3.5;
+/**
+ * PDF rasterisé (html2canvas → jsPDF) : compromis vitesse / qualité impression.
+ * - scale ~3 : ~300 dpi effectifs sur la largeur logique 794px (A4 a 96 dpi) - suffisant pour l'impression pro.
+ * - JPEG 0.97 : encode et embarque beaucoup plus vite que le PNG, taille PDF réduite, rendu texte/aplats excellent.
+ *   (Monter à 0.99 ou scale 3.5 si besoin marginal de netteté ; PNG possible mais ~2–4× plus lent.)
+ */
+const PDF_HTML2CANVAS_SCALE = 3;
+const PDF_JPEG_QUALITY = 0.97;
 
 function buildLiveDoc() {
   // Build a doc object from the current form state
@@ -264,20 +270,34 @@ async function _generateAndDownloadPDF(docObj, tpl, color) {
   };
 
   try {
-    await new Promise(resolve => {
-      iframe.onload = resolve;
+    {
       const idoc = iframe.contentDocument || iframe.contentWindow.document;
       idoc.open();
       idoc.write(htmlStr);
       idoc.close();
-      setTimeout(resolve, 800);
-    });
-
-    setPdfSpinnerStep('Chargement des polices…', 35);
-    // Wait for fonts/images
-    await new Promise(r => setTimeout(r, 400));
-
+    }
     const idoc = iframe.contentDocument || iframe.contentWindow.document;
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+    setPdfSpinnerStep('Chargement des polices…', 28);
+    try {
+      await Promise.race([
+        idoc.fonts?.ready ?? Promise.resolve(),
+        new Promise(r => setTimeout(r, 1500)),
+      ]);
+    } catch (_) {}
+    const imgs = idoc.querySelectorAll?.('img') || [];
+    await Promise.all(
+      [...imgs].map(
+        img =>
+          new Promise(res => {
+            if (img.complete) return res();
+            img.addEventListener('load', res, { once: true });
+            img.addEventListener('error', res, { once: true });
+          }),
+      ),
+    );
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     const body = idoc.body;
 
     // Use html2canvas to render
@@ -309,7 +329,12 @@ async function _generateAndDownloadPDF(docObj, tpl, color) {
 
     setPdfSpinnerStep('Assemblage du PDF…', 80);
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+      compress: true,
+    });
 
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
@@ -320,12 +345,10 @@ async function _generateAndDownloadPDF(docObj, tpl, color) {
     // SEUIL : on n'ajoute une page que si le contenu restant dépasse 5mm
     const MIN_SLICE = 5;
 
-    const rasterToPdf = cvs => cvs.toDataURL('image/png');
+    const rasterToPdf = cvs => cvs.toDataURL('image/jpeg', PDF_JPEG_QUALITY);
 
     if (imgH <= pageH + MIN_SLICE) {
-      // Tout tient en une seule page — pas de découpage (PNG = contours nets à l’impression)
-      const imgData = rasterToPdf(canvas);
-      pdf.addImage(imgData, 'PNG', 0, 0, pageW, Math.min(imgH, pageH), undefined, 'SLOW');
+      pdf.addImage(rasterToPdf(canvas), 'JPEG', 0, 0, pageW, Math.min(imgH, pageH), undefined, 'FAST');
     } else {
       // Multi-pages : découper proprement
       let yPosMM = 0;
@@ -348,7 +371,7 @@ async function _generateAndDownloadPDF(docObj, tpl, color) {
         ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
         ctx.drawImage(canvas, 0, srcYpx, canvas.width, sliceHpx, 0, 0, canvas.width, sliceHpx);
 
-        pdf.addImage(rasterToPdf(sliceCanvas), 'PNG', 0, 0, pageW, sliceHmm, undefined, 'SLOW');
+        pdf.addImage(rasterToPdf(sliceCanvas), 'JPEG', 0, 0, pageW, sliceHmm, undefined, 'FAST');
 
         yPosMM += pageH;
         remainMM -= pageH;

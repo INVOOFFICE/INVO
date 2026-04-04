@@ -24,6 +24,7 @@ Le script `postinstall` exécute `scripts/vendor-copy.mjs` (copie des dépendanc
 | `npm run format`       | Prettier (écriture)                |
 | `npm run format:check` | Prettier (vérification seulement)  |
 | `npm run audit`        | `npm audit --production` (dépendances runtime) |
+| `npm run check:merge`  | Détecte les marqueurs de conflit Git (`<<<<<<<` / `>>>>>>>`) dans les sources |
 
 ## Lancer l’application en local
 

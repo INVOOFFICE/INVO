@@ -19,6 +19,8 @@ preloadOPFS()
   .then(() => checkAuth())
   .catch(() => checkAuth())
   .finally(() => _removeBootSpinner());
+// Secours : si une promesse ne se termine jamais (ex. file:// ou bug), débloquer l’UI
+setTimeout(_removeBootSpinner, 15000);
 
 // ── Mobile helpers (swipe sidebar) ──
 // ═══════════════════════════════════════════
