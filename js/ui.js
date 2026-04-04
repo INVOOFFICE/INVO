@@ -157,11 +157,11 @@ function invoFooterTaglineHtml(variant) {
   const y = new Date().getFullYear();
   const linkClass = variant === 'print' ? 'invo-link-print' : 'invo-link-auth';
   const core =
-    'INVOO OFFICE · Système de facturation intelligent ·<br>Données 100% locales · Conforme DGI Maroc ·<br>© ' +
+    'INVOO OFFICE · Système de facturation intelligent ·<br>Données 100 % locales · Conforme DGI Maroc © ' +
     y +
-    ' INVOO OFFICE — <a href="https://invooffice.com" target="_blank" rel="noopener noreferrer" class="' +
+    ' INVOO OFFICE · <a href="paiement.html" class="' +
     linkClass +
-    '">invooffice.com</a>';
+    '">Paiement de licence</a>';
   if (variant === 'sidebar') {
     return (
       '<div class="sb-footer-tagline-inner">' +

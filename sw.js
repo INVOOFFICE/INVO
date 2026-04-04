@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════
 
 /** Nom du cache statique — incrémenter (ex. invo-v3) pour invalider tout le précache. */
-const CACHE_NAME = 'invo-v11';
+const CACHE_NAME = 'invo-v12';
 /** Mettre à true uniquement en dev : logs fetch dans networkFirstNoCache */
 const SW_DEBUG = false;
 
@@ -14,6 +14,7 @@ const PRECACHE_ASSETS = [
   './',
   './index.html',
   './privacy.html',
+  './paiement.html',
   './manifest.json',
   './icon.svg',
   './icons/icon-192.png',
@@ -36,6 +37,7 @@ const PRECACHE_ASSETS = [
   './css/pages/pdf-preview.css',
   './css/pages/templates-mobile-static.css',
   './css/pages/responsive.css',
+  './css/paiement-licence.css',
   './assets/fonts/plus-jakarta-sans/files/plus-jakarta-sans-latin-400-normal.woff2',
   './assets/fonts/plus-jakarta-sans/files/plus-jakarta-sans-latin-500-normal.woff2',
   './assets/fonts/plus-jakarta-sans/files/plus-jakarta-sans-latin-600-normal.woff2',

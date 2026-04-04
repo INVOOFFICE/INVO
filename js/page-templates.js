@@ -841,7 +841,8 @@ function templatePageSettings() {
         </button>
       </div>
     </div>
-  </div>`;
+  </div>
+</div>`;
 }
 function buildAppPagesHtml() {
   return [
