@@ -718,6 +718,9 @@ function init() {
   buildNotifications();
   if (typeof checkBackupReminder === 'function') checkBackupReminder();
   if (typeof renderBackupReminderStatus === 'function') renderBackupReminderStatus();
+  if (typeof invooSupabaseTryAutoStart === 'function') {
+    setTimeout(() => void invooSupabaseTryAutoStart(), 1200);
+  }
   applyDeepLinkFromHash();
   // ⚠️ Les listeners 'keydown' (globalKeyHandler) et 'click' (fermeture notif-panel)
   // sont enregistrés UNE SEULE FOIS dans events.js (DOMContentLoaded).

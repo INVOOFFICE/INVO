@@ -589,6 +589,7 @@ async function receiveBC(id) {
           art.fournisseurId = bc.fournisseurId;
           art.fournisseurName = bc.fournisseurName || art.fournisseurName || '';
         }
+        art.updatedAt = new Date().toISOString();
       }
     }
   }
@@ -631,6 +632,7 @@ async function deleteBC(id) {
     okStyle: 'danger',
   });
   if (!ok) return;
+  if (typeof invooSupabaseSoftDelete === 'function') invooSupabaseSoftDelete('bonsCommande', id);
   DB.bonsCommande = DB.bonsCommande.filter(x => String(x.id) !== String(id));
   save('bonsCommande');
   renderBonsCommande();

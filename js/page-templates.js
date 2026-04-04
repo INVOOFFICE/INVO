@@ -746,6 +746,125 @@ function templatePageSettings() {
     </div>
   </div>
 
+  <!-- ══ SYNC SUPABASE (OPTIONNEL) ══ -->
+  <div class="settings-section settings-supabase-section">
+    <div class="settings-section-header">
+      <div class="settings-section-icon settings-icon-supabase" aria-hidden="true">☁️</div>
+      <div>
+        <div class="settings-section-title">Sync multi-appareils — Supabase</div>
+        <div class="settings-subtitle">Optionnel — votre propre projet Supabase (jamais activé sans votre accord)</div>
+      </div>
+    </div>
+    <div class="settings-section-body">
+      <label class="ui-toggle settings-supabase-toggle" for="s-supabase-sync-enabled">
+        <input type="checkbox" class="ui-toggle-input" id="s-supabase-sync-enabled" name="supabase-sync-enabled" aria-describedby="supabase-sync-help">
+        <span class="ui-toggle-track" aria-hidden="true"></span>
+        <span class="settings-pdf-toggle-text">Activer la synchronisation cloud (Supabase)</span>
+      </label>
+      <p id="supabase-sync-help" class="settings-paragraph settings-supabase-help">
+        Lorsque cette option est activée, vous pouvez connecter l’app à <strong>votre</strong> base Supabase pour fusionner clients, documents, stock, fournisseurs, bons de commande et mouvements de stock entre appareils. Rien n’est envoyé tant que vous n’avez pas saisi l’URL et la clé <strong>anon</strong> et cliqué sur « Connecter ».
+      </p>
+
+      <div class="settings-supabase-steps">
+        <div class="settings-mini-title">Comment configurer ?</div>
+        <ol class="settings-supabase-ol">
+          <li>Créez un compte gratuit sur <a href="https://supabase.com" target="_blank" rel="noopener noreferrer">supabase.com</a></li>
+          <li>Créez un projet → <strong>SQL Editor</strong> → exécutez le script ci-dessous (une fois)</li>
+          <li><strong>Database → Publications</strong> : ajoutez chaque table <code>invoo_rt_*</code> à <code>supabase_realtime</code> (mises à jour instantanées entre appareils)</li>
+          <li><strong>Settings → API</strong> : copiez <strong>Project URL</strong> et <strong>anon public</strong> key</li>
+          <li>Collez-les ci-dessous puis <strong>Connecter &amp; synchroniser</strong></li>
+        </ol>
+      </div>
+
+      <div class="settings-supabase-privacy">
+        <div class="settings-mini-title">Confidentialité des données</div>
+        <p class="settings-paragraph">
+          La synchronisation envoie les enregistrements en JSON dans la colonne <code>data</code> (jsonb). Pour un usage personnel sur un <strong>projet privé</strong>, c’est généralement acceptable. Un administrateur du projet Supabase peut lire ces données (factures, clients, stock, etc.). N’utilisez <strong>jamais</strong> la clé <code>service_role</code> dans l’application.
+        </p>
+      </div>
+
+      <div class="settings-mini-title">Script SQL — à exécuter une seule fois dans Supabase → SQL Editor</div>
+      <div class="settings-supabase-sql-wrap">
+        <pre id="supabase-sql-template" class="settings-supabase-sql" readonly>-- INVOO OFFICE — tables de sync (id + jsonb + soft delete)
+create table if not exists public.invoo_rt_clients (
+  id text primary key,
+  data jsonb not null default '{}'::jsonb,
+  deleted_at timestamptz null,
+  updated_at timestamptz not null default now()
+);
+create table if not exists public.invoo_rt_docs (
+  id text primary key,
+  data jsonb not null default '{}'::jsonb,
+  deleted_at timestamptz null,
+  updated_at timestamptz not null default now()
+);
+create table if not exists public.invoo_rt_stock (
+  id text primary key,
+  data jsonb not null default '{}'::jsonb,
+  deleted_at timestamptz null,
+  updated_at timestamptz not null default now()
+);
+create table if not exists public.invoo_rt_fournisseurs (
+  id text primary key,
+  data jsonb not null default '{}'::jsonb,
+  deleted_at timestamptz null,
+  updated_at timestamptz not null default now()
+);
+create table if not exists public.invoo_rt_bons_commande (
+  id text primary key,
+  data jsonb not null default '{}'::jsonb,
+  deleted_at timestamptz null,
+  updated_at timestamptz not null default now()
+);
+create table if not exists public.invoo_rt_stock_moves (
+  id text primary key,
+  data jsonb not null default '{}'::jsonb,
+  deleted_at timestamptz null,
+  updated_at timestamptz not null default now()
+);
+alter table public.invoo_rt_clients enable row level security;
+alter table public.invoo_rt_docs enable row level security;
+alter table public.invoo_rt_stock enable row level security;
+alter table public.invoo_rt_fournisseurs enable row level security;
+alter table public.invoo_rt_bons_commande enable row level security;
+alter table public.invoo_rt_stock_moves enable row level security;
+create policy "invoo_rt_clients_anon" on public.invoo_rt_clients for all using (true) with check (true);
+create policy "invoo_rt_docs_anon" on public.invoo_rt_docs for all using (true) with check (true);
+create policy "invoo_rt_stock_anon" on public.invoo_rt_stock for all using (true) with check (true);
+create policy "invoo_rt_fournisseurs_anon" on public.invoo_rt_fournisseurs for all using (true) with check (true);
+create policy "invoo_rt_bons_commande_anon" on public.invoo_rt_bons_commande for all using (true) with check (true);
+create policy "invoo_rt_stock_moves_anon" on public.invoo_rt_stock_moves for all using (true) with check (true);
+-- Realtime : répéter pour chaque table (ou via l’interface Publications)
+alter publication supabase_realtime add table public.invoo_rt_clients;
+alter publication supabase_realtime add table public.invoo_rt_docs;
+alter publication supabase_realtime add table public.invoo_rt_stock;
+alter publication supabase_realtime add table public.invoo_rt_fournisseurs;
+alter publication supabase_realtime add table public.invoo_rt_bons_commande;
+alter publication supabase_realtime add table public.invoo_rt_stock_moves;</pre>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-supabase-copy-sql">Copier le script</button>
+      </div>
+
+      <div class="field-row c1 settings-supabase-fields">
+        <div class="form-group">
+          <label for="s-supabase-url">Project URL <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" class="settings-help-inline">Ouvrir Supabase</a></label>
+          <input type="url" id="s-supabase-url" name="supabase-url" placeholder="https://xxxxxxxxxxxx.supabase.co" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="form-group">
+          <label for="s-supabase-anon-key">Clé API (anon public)</label>
+          <input type="password" id="s-supabase-anon-key" name="supabase-anon-key" placeholder="eyJhbGciOiJIUzI1NiIs…" autocomplete="off" spellcheck="false">
+          <p class="settings-logo-height-help">Utilisez la clé <strong>anon</strong> — jamais la clé <code>service_role</code>.</p>
+        </div>
+      </div>
+
+      <div class="settings-supabase-actions">
+        <button type="button" class="btn btn-primary" id="btn-supabase-connect">Connecter &amp; synchroniser</button>
+        <button type="button" class="btn btn-secondary" id="btn-supabase-sync-now">Synchroniser maintenant</button>
+        <button type="button" class="btn btn-secondary" id="btn-supabase-disconnect">Déconnecter</button>
+      </div>
+      <p class="settings-supabase-status-line">État : <strong id="supabase-sync-status">Non configuré</strong></p>
+    </div>
+  </div>
+
   <!-- ══ SAUVEGARDE & RESTAURATION ══ -->
   <div class="settings-section settings-backup-section">
     <div class="settings-section-header settings-backup-header">

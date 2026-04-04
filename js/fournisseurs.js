@@ -330,6 +330,7 @@ async function deleteFourn(id) {
   });
   if (!ok) return;
 
+  if (typeof invooSupabaseSoftDelete === 'function') invooSupabaseSoftDelete('fournisseurs', id);
   DB.fournisseurs = DB.fournisseurs.filter(x => String(x.id) !== String(id));
   save('fournisseurs');
   renderFournisseurs();

@@ -17,7 +17,7 @@
   img-src 'self' data: blob:;
   font-src 'self' data:;
   worker-src 'self' blob:;
-  connect-src 'self' blob:;
+  connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co;
   frame-src 'self' data: blob:;
   frame-ancestors 'none';
   object-src 'none';
@@ -1026,6 +1026,7 @@
 <script src="js/vendor/xlsx.full.min.js" defer></script>
 <script src="js/vendor/flatpickr.min.js" defer></script>
 <script src="js/vendor/flatpickr-fr.js" defer></script>
+<script src="js/vendor/supabase.umd.js" defer></script>
 
 <!-- ═══ Modules INVO (ordre strict de dépendances) ═══ -->
 <!-- DOMPurify local (pas de CDN) — avant sanitize + html-safe -->
@@ -1051,6 +1052,7 @@
 <script src="js/pdf.js" defer></script>
 <!-- 5. Entities : backup → products → imports → clients → invoices -->
 <script src="js/backup.js" defer></script>
+<script src="js/supabase-sync.js" defer></script>
 <script src="js/products.js" defer></script>
 <script src="js/imports.js" defer></script>
 <script src="js/clients.js" defer></script>

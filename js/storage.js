@@ -288,6 +288,9 @@ const DB_DEFAULTS = {
     pdfShowCompanyInfoWithLogo: true,
     backupMonthlyDay: 0,
     lastMonthlyBackupPromptDate: '',
+    supabaseSyncEnabled: false,
+    supabaseUrl: '',
+    supabaseAnonKey: '',
   },
   clients: [],
   stock: [],
@@ -543,6 +546,11 @@ async function migrateStorageFormatIfNeeded() {
 
 function save(key) {
   if (KEYS[key]) lss(KEYS[key], DB[key]);
+  if (typeof window.invooSupabaseOnLocalChange === 'function' && Object.prototype.hasOwnProperty.call(KEYS, key)) {
+    try {
+      window.invooSupabaseOnLocalChange(key);
+    } catch (_) {}
+  }
 }
 function saveAll() {
   Object.keys(KEYS).forEach(save);

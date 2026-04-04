@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@fontsource/plus-jakarta-sans": "^5.2.5",
+    "@supabase/supabase-js": "^2.101.1",
     "chart.js": "^4.4.1",
     "dompurify": "^3.2.5",
     "flatpickr": "^4.6.13",

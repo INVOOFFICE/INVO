@@ -2461,6 +2461,7 @@ async function deleteDoc(id) {
       save('stock');
       if (stockLines.length) toast(`📦 Stock restitué pour ${stockLines.length} article(s)`, 'suc');
     }
+    if (typeof invooSupabaseSoftDelete === 'function') invooSupabaseSoftDelete('docs', id);
     DB.docs = DB.docs.filter(x => x.id !== id);
     save('docs');
     renderHistory();

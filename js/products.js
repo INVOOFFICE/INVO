@@ -499,6 +499,7 @@ function adjustQty(id, delta) {
   if (idx < 0) return;
   const newQty = Math.max(0, (DB.stock[idx].qty || 0) + delta);
   DB.stock[idx].qty = newQty;
+  DB.stock[idx].updatedAt = new Date().toISOString();
   save('stock');
   renderStock();
   toast(`${DB.stock[idx].name}: ${newQty} unité(s)`, newQty === 0 ? 'err' : 'suc');
@@ -585,6 +586,12 @@ function saveArticle() {
   const finalTva = getArticleTvaRate(prevArticle);
   const buyTtc = parsePriceInputToStoredTTC(document.getElementById('a-buy').value, finalTva);
   const sellTtc = parsePriceInputToStoredTTC(document.getElementById('a-sell').value, finalTva);
+  const now = new Date().toISOString();
+  let createdAt = now;
+  if (APP.editArticleId) {
+    const prev = DB.stock.find(x => String(x.id) === String(APP.editArticleId));
+    if (prev?.createdAt) createdAt = prev.createdAt;
+  }
   const article = {
     id: APP.editArticleId || 'art_' + Date.now(),
     name,
@@ -598,6 +605,8 @@ function saveArticle() {
     fournisseurId: fournId,
     fournisseurName:
       (DB.fournisseurs || []).find(f => String(f.id) === String(fournId || ''))?.name || '',
+    createdAt,
+    updatedAt: now,
   };
   if (APP.editArticleId) {
     const idx = DB.stock.findIndex(x => String(x.id) === String(APP.editArticleId));
@@ -619,6 +628,7 @@ async function deleteArticle(id) {
     okStyle: 'danger',
   });
   if (!ok) return;
+  if (typeof invooSupabaseSoftDelete === 'function') invooSupabaseSoftDelete('stock', id);
   DB.stock = DB.stock.filter(a => String(a.id) !== String(id));
   save('stock');
   renderStock();
@@ -633,6 +643,11 @@ async function clearStock() {
     okStyle: 'danger',
   });
   if (!ok) return;
+  if (typeof invooSupabaseSoftDelete === 'function') {
+    for (const a of DB.stock) {
+      if (a?.id != null) invooSupabaseSoftDelete('stock', a.id);
+    }
+  }
   DB.stock = [];
   save('stock');
   renderStock();

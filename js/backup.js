@@ -130,6 +130,7 @@ function loadSettings() {
   loadTemplateSettings();
   syncLogoSettingsUI();
   if (typeof renderSettingsActivationStatus === 'function') void renderSettingsActivationStatus();
+  if (typeof syncSupabaseSettingsUI === 'function') syncSupabaseSettingsUI();
 }
 function saveSettings() {
   const s = DB.settings;
@@ -172,7 +173,20 @@ function saveSettings() {
     s.backupMonthlyDay = v;
   }
   saveTemplateSettings();
+  const ssb = document.getElementById('s-supabase-sync-enabled');
+  if (ssb) {
+    const was = s.supabaseSyncEnabled;
+    s.supabaseSyncEnabled = !!ssb.checked;
+    if (was && !s.supabaseSyncEnabled && typeof invooSupabaseDisconnect === 'function') {
+      invooSupabaseDisconnect(true);
+    }
+  }
+  const surl = document.getElementById('s-supabase-url');
+  if (surl) s.supabaseUrl = surl.value.trim();
+  const sak = document.getElementById('s-supabase-anon-key');
+  if (sak && sak.value.trim()) s.supabaseAnonKey = sak.value.trim();
   save('settings');
+  if (typeof syncSupabaseSettingsUI === 'function') syncSupabaseSettingsUI();
   toast('Paramètres sauvegardés ✓', 'suc');
   updateSettingsScore();
   if (typeof renderBackupReminderStatus === 'function') renderBackupReminderStatus();
@@ -472,6 +486,7 @@ async function clearAllData() {
     okStyle: 'danger',
   });
   if (!ok) return;
+  if (typeof invooSupabaseDisconnect === 'function') invooSupabaseDisconnect(true);
   DB.clients = [];
   DB.stock = [];
   DB.docs = [];
@@ -507,6 +522,9 @@ async function clearAllData() {
     pdfShowCompanyInfoWithLogo: true,
     backupMonthlyDay: 0,
     lastMonthlyBackupPromptDate: '',
+    supabaseSyncEnabled: false,
+    supabaseUrl: '',
+    supabaseAnonKey: '',
   };
   // Clear OPFS cache and files
   APP.opfs.memCache = {};

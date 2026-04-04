@@ -463,6 +463,41 @@ document.addEventListener('DOMContentLoaded', () => {
   // ════════════════════════════════════════
   document.getElementById('btn-save-settings')?.addEventListener('click', saveSettings);
   document.getElementById('btn-cancel-settings')?.addEventListener('click', loadSettings);
+
+  document.getElementById('btn-supabase-copy-sql')?.addEventListener('click', () => {
+    const pre = document.getElementById('supabase-sql-template');
+    const t = pre?.textContent?.trim() || '';
+    if (!t) return;
+    const ok = (msg, kind) => {
+      if (typeof toast === 'function') toast(msg, kind || 'suc');
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(t).then(() => ok('Script SQL copié ✓'), () => ok('Copie impossible', 'err'));
+    } else {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = t;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        ok('Script SQL copié ✓');
+      } catch {
+        ok('Copie impossible', 'err');
+      }
+    }
+  });
+  document.getElementById('btn-supabase-connect')?.addEventListener('click', () => {
+    if (typeof invooSupabaseConnect === 'function') void invooSupabaseConnect();
+  });
+  document.getElementById('btn-supabase-sync-now')?.addEventListener('click', () => {
+    if (typeof invooSupabaseSyncNow === 'function') void invooSupabaseSyncNow();
+  });
+  document.getElementById('btn-supabase-disconnect')?.addEventListener('click', () => {
+    if (typeof invooSupabaseDisconnect === 'function') invooSupabaseDisconnect();
+  });
   document.getElementById('s-price-mode')?.addEventListener('change', e => {
     if (typeof setGlobalPriceMode === 'function') setGlobalPriceMode(e.target.value);
   });

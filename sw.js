@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════
 
 /** Nom du cache statique — incrémenter (ex. invo-v3) pour invalider tout le précache. */
-const CACHE_NAME = 'invo-v12';
+const CACHE_NAME = 'invo-v13';
 /** Mettre à true uniquement en dev : logs fetch dans networkFirstNoCache */
 const SW_DEBUG = false;
 
@@ -62,6 +62,7 @@ const PRECACHE_ASSETS = [
   './js/ui.js',
   './js/pdf.js',
   './js/backup.js',
+  './js/supabase-sync.js',
   './js/products.js',
   './js/imports.js',
   './js/clients.js',

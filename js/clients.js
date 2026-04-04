@@ -354,6 +354,12 @@ async function saveClient() {
     }
   }
   const isPro = APP.newClientType === 'professionnel';
+  const now = new Date().toISOString();
+  let createdAt = now;
+  if (APP.editClientId) {
+    const prev = DB.clients.find(x => String(x.id) === String(APP.editClientId));
+    if (prev?.createdAt) createdAt = prev.createdAt;
+  }
   const client = {
     id: APP.editClientId || 'cli_' + Date.now(),
     name,
@@ -366,6 +372,8 @@ async function saveClient() {
     phone: document.getElementById('c-phone').value.trim(),
     city: document.getElementById('c-city').value.trim(),
     notes: document.getElementById('c-notes').value.trim(),
+    createdAt,
+    updatedAt: now,
   };
   if (APP.editClientId) {
     const idx = DB.clients.findIndex(x => String(x.id) === String(APP.editClientId));
@@ -396,6 +404,7 @@ async function deleteClient(id) {
     okStyle: 'danger',
   });
   if (!ok) return;
+  if (typeof invooSupabaseSoftDelete === 'function') invooSupabaseSoftDelete('clients', id);
   DB.clients = DB.clients.filter(c => String(c.id) !== String(id));
   save('clients');
   renderClients();

@@ -63,6 +63,10 @@ cp(
   path.join(root, 'node_modules/papaparse/papaparse.min.js'),
   path.join(root, 'js/vendor/papaparse.min.js'),
 );
+cp(
+  path.join(root, 'node_modules/@supabase/supabase-js/dist/umd/supabase.js'),
+  path.join(root, 'js/vendor/supabase.umd.js'),
+);
 
 // ── Polices (Fontsource) — chemins relatifs ./files/ dans index.css ──
 const fontSrc = path.join(root, 'node_modules/@fontsource/plus-jakarta-sans');

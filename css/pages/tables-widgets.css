@@ -297,3 +297,53 @@
 .ssi-logo {
   background: rgba(240, 165, 0, 0.16);
 }
+.settings-icon-supabase {
+  background: rgba(62, 142, 222, 0.18);
+  color: var(--info);
+}
+.settings-supabase-section .settings-supabase-help,
+.settings-supabase-privacy {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.settings-supabase-ol {
+  margin: 8px 0 0;
+  padding-left: 1.25rem;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.settings-supabase-sql-wrap {
+  margin-top: 12px;
+}
+.settings-supabase-sql {
+  max-height: 220px;
+  overflow: auto;
+  padding: 12px;
+  margin: 0 0 10px;
+  font-size: 11px;
+  line-height: 1.45;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.settings-supabase-fields {
+  margin-top: 16px;
+}
+.settings-supabase-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.settings-supabase-status-line {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.settings-help-inline {
+  font-weight: 400;
+  font-size: 12px;
+}
