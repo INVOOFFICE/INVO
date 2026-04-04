@@ -161,6 +161,14 @@ function saveSettings() {
   const stvaEl = document.getElementById('s-tva');
   if (scEl && scEl.value) s.currency = scEl.value;
   if (stvaEl && stvaEl.value != null && stvaEl.value !== '') s.tva = stvaEl.value;
+  const spm = document.getElementById('s-price-mode');
+  if (spm) {
+    const m = typeof normalizePriceMode === 'function' ? normalizePriceMode(spm.value) || 'TTC' : 'TTC';
+    s.globalPriceMode = m;
+    try {
+      localStorage.setItem('priceMode', m);
+    } catch (_) {}
+  }
   s.seqF = parseInt(document.getElementById('s-seq-f')?.value, 10) || 1;
   s.seqD = parseInt(document.getElementById('s-seq-d')?.value, 10) || 1;
   s.seqBL = parseInt(document.getElementById('s-seq-bl')?.value, 10) || 1;
@@ -525,6 +533,8 @@ async function clearAllData() {
     supabaseSyncEnabled: false,
     supabaseUrl: '',
     supabaseAnonKey: '',
+    supabaseSettingsRowUpdatedAt: '',
+    globalPriceMode: 'TTC',
   };
   // Clear OPFS cache and files
   APP.opfs.memCache = {};

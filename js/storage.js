@@ -291,6 +291,10 @@ const DB_DEFAULTS = {
     supabaseSyncEnabled: false,
     supabaseUrl: '',
     supabaseAnonKey: '',
+    /** Horodatage distant dernier appliqué (local uniquement — non synchronisé) */
+    supabaseSettingsRowUpdatedAt: '',
+    /** TTC | HT — aligné sur Paramètres + localStorage priceMode */
+    globalPriceMode: 'TTC',
   },
   clients: [],
   stock: [],
@@ -398,7 +402,14 @@ async function runDbMigrationsIfNeeded() {
 
 // Peuple DB depuis le cache mémoire OPFS (appelé après preloadOPFS)
 function _initDBFromCache() {
-  DB.settings = { ...DB_DEFAULTS.settings, ...(ls(KEYS.settings) || {}) };
+  const loadedSettings = ls(KEYS.settings) || {};
+  DB.settings = { ...DB_DEFAULTS.settings, ...loadedSettings };
+  if (!Object.prototype.hasOwnProperty.call(loadedSettings, 'globalPriceMode')) {
+    try {
+      const r = localStorage.getItem('priceMode');
+      if (r === 'HT' || r === 'TTC') DB.settings.globalPriceMode = r;
+    } catch (_) {}
+  }
   DB.clients = ls(KEYS.clients) || [];
   DB.stock = ls(KEYS.stock) || [];
   DB.docs = ls(KEYS.docs) || [];

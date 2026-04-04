@@ -21,6 +21,9 @@ function normalizePriceMode(v) {
  */
 function getGlobalPriceMode() {
   try {
+    const fromDb =
+      typeof DB !== 'undefined' && DB.settings && normalizePriceMode(DB.settings.globalPriceMode);
+    if (fromDb) return fromDb;
     const raw = localStorage.getItem(PRICE_MODE_LS_KEY);
     return normalizePriceMode(raw) || 'TTC';
   } catch {
@@ -34,6 +37,14 @@ function getGlobalPriceMode() {
  */
 function setGlobalPriceMode(mode) {
   const m = normalizePriceMode(mode) || 'TTC';
+  try {
+    if (typeof DB !== 'undefined' && DB.settings) {
+      DB.settings.globalPriceMode = m;
+      if (typeof save === 'function') save('settings');
+    }
+  } catch (_) {
+    /* ignore */
+  }
   try {
     localStorage.setItem(PRICE_MODE_LS_KEY, m);
   } catch (_) {

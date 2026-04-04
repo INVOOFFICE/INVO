@@ -762,7 +762,7 @@ function templatePageSettings() {
         <span class="settings-pdf-toggle-text">Activer la synchronisation cloud (Supabase)</span>
       </label>
       <p id="supabase-sync-help" class="settings-paragraph settings-supabase-help">
-        Lorsque cette option est activée, vous pouvez connecter l’app à <strong>votre</strong> base Supabase pour fusionner clients, documents, stock, fournisseurs, bons de commande et mouvements de stock entre appareils. Rien n’est envoyé tant que vous n’avez pas saisi l’URL et la clé <strong>anon</strong> et cliqué sur « Connecter ».
+        Lorsque cette option est activée, vous pouvez connecter l’app à <strong>votre</strong> base Supabase pour fusionner <strong>toutes les préférences enregistrées dans Paramètres</strong> (entreprise, banque, légal DGI, modèle PDF, logo, compteurs, rappels backup, mode TTC/HT, etc.), ainsi que clients, documents, stock, fournisseurs, bons de commande et mouvements de stock entre appareils. Seuls l’URL projet, la clé <strong>anon</strong> et l’interrupteur « activer la sync » restent <strong>locaux à l’appareil</strong> (jamais envoyés dans le JSON synchronisé). Rien n’est envoyé tant que vous n’avez pas saisi l’URL et la clé <strong>anon</strong> et cliqué sur « Connecter ».
       </p>
 
       <div class="settings-supabase-steps">
@@ -779,7 +779,7 @@ function templatePageSettings() {
       <div class="settings-supabase-privacy">
         <div class="settings-mini-title">Confidentialité des données</div>
         <p class="settings-paragraph">
-          La synchronisation envoie les enregistrements en JSON dans la colonne <code>data</code> (jsonb). Pour un usage personnel sur un <strong>projet privé</strong>, c’est généralement acceptable. Un administrateur du projet Supabase peut lire ces données (factures, clients, stock, etc.). N’utilisez <strong>jamais</strong> la clé <code>service_role</code> dans l’application.
+          La synchronisation envoie les enregistrements en JSON dans la colonne <code>data</code> (jsonb), y compris l’ensemble des <strong>paramètres métier</strong> (coordonnées, RIB, ICE/IF/RC, logo, rappels backup, etc.). Pour un usage personnel sur un <strong>projet privé</strong>, c’est généralement acceptable. Un administrateur du projet Supabase peut lire ces données. N’utilisez <strong>jamais</strong> la clé <code>service_role</code> dans l’application.
         </p>
       </div>
 
@@ -822,25 +822,34 @@ create table if not exists public.invoo_rt_stock_moves (
   deleted_at timestamptz null,
   updated_at timestamptz not null default now()
 );
+create table if not exists public.invoo_rt_settings (
+  id text primary key,
+  data jsonb not null default '{}'::jsonb,
+  deleted_at timestamptz null,
+  updated_at timestamptz not null default now()
+);
 alter table public.invoo_rt_clients enable row level security;
 alter table public.invoo_rt_docs enable row level security;
 alter table public.invoo_rt_stock enable row level security;
 alter table public.invoo_rt_fournisseurs enable row level security;
 alter table public.invoo_rt_bons_commande enable row level security;
 alter table public.invoo_rt_stock_moves enable row level security;
+alter table public.invoo_rt_settings enable row level security;
 create policy "invoo_rt_clients_anon" on public.invoo_rt_clients for all using (true) with check (true);
 create policy "invoo_rt_docs_anon" on public.invoo_rt_docs for all using (true) with check (true);
 create policy "invoo_rt_stock_anon" on public.invoo_rt_stock for all using (true) with check (true);
 create policy "invoo_rt_fournisseurs_anon" on public.invoo_rt_fournisseurs for all using (true) with check (true);
 create policy "invoo_rt_bons_commande_anon" on public.invoo_rt_bons_commande for all using (true) with check (true);
 create policy "invoo_rt_stock_moves_anon" on public.invoo_rt_stock_moves for all using (true) with check (true);
+create policy "invoo_rt_settings_anon" on public.invoo_rt_settings for all using (true) with check (true);
 -- Realtime : répéter pour chaque table (ou via l’interface Publications)
 alter publication supabase_realtime add table public.invoo_rt_clients;
 alter publication supabase_realtime add table public.invoo_rt_docs;
 alter publication supabase_realtime add table public.invoo_rt_stock;
 alter publication supabase_realtime add table public.invoo_rt_fournisseurs;
 alter publication supabase_realtime add table public.invoo_rt_bons_commande;
-alter publication supabase_realtime add table public.invoo_rt_stock_moves;</pre>
+alter publication supabase_realtime add table public.invoo_rt_stock_moves;
+alter publication supabase_realtime add table public.invoo_rt_settings;</pre>
         <button type="button" class="btn btn-secondary btn-sm" id="btn-supabase-copy-sql">Copier le script</button>
       </div>
 

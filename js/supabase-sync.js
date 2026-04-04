@@ -3,7 +3,19 @@
  * Voir SUPABASE-REALTIME-GUIDE.txt
  */
 (function () {
+  /**
+   * Tout `DB.settings` est synchronisé sauf ces clés (connexion Supabase + marqueur de fusion local).
+   * Valeurs : string, number, boolean ou null uniquement (pas d’objets imbriqués).
+   */
+  const SETTINGS_LOCAL_ONLY_KEYS = new Set([
+    'supabaseSyncEnabled',
+    'supabaseUrl',
+    'supabaseAnonKey',
+    'supabaseSettingsRowUpdatedAt',
+  ]);
+  const SETTINGS_ROW_ID = 'invoo_app_settings';
   const TABLE_MAP = {
+    settings: 'invoo_rt_settings',
     clients: 'invoo_rt_clients',
     docs: 'invoo_rt_docs',
     stock: 'invoo_rt_stock',
@@ -32,6 +44,101 @@
 
   function localItemTs(item) {
     return Math.max(tsIso(item.updatedAt), tsIso(item.createdAt));
+  }
+
+  function isJsonPrimitiveSyncable(v) {
+    if (v === null) return true;
+    const t = typeof v;
+    return t === 'string' || t === 'number' || t === 'boolean';
+  }
+
+  function extractSyncableSettings() {
+    const s = DB.settings || {};
+    const out = {};
+    for (const key of Object.keys(s)) {
+      if (SETTINGS_LOCAL_ONLY_KEYS.has(key)) continue;
+      const v = s[key];
+      if (v === undefined) continue;
+      if (!isJsonPrimitiveSyncable(v)) continue;
+      out[key] = v;
+    }
+    return out;
+  }
+
+  function mergeSettingsFromRemoteData(remoteData) {
+    if (!remoteData || typeof remoteData !== 'object') return;
+    const s = DB.settings;
+    for (const key of Object.keys(remoteData)) {
+      if (SETTINGS_LOCAL_ONLY_KEYS.has(key)) continue;
+      const v = remoteData[key];
+      if (!isJsonPrimitiveSyncable(v)) continue;
+      s[key] = v;
+    }
+  }
+
+  async function pullSettingsRow() {
+    if (!_client) return;
+    const table = TABLE_MAP.settings;
+    const { data: rows, error } = await _client
+      .from(table)
+      .select('id,data,deleted_at,updated_at')
+      .eq('id', SETTINGS_ROW_ID)
+      .maybeSingle();
+    if (error) throw error;
+    if (!rows || (rows.deleted_at != null && rows.deleted_at !== '')) return;
+    const rts = tsIso(rows.updated_at);
+    const lts = tsIso(DB.settings?.supabaseSettingsRowUpdatedAt);
+    if (rts <= lts) return;
+    let remoteData = rows.data;
+    if (typeof remoteData === 'string') {
+      try {
+        remoteData = JSON.parse(remoteData);
+      } catch {
+        return;
+      }
+    }
+    const touchPriceMode = Object.prototype.hasOwnProperty.call(remoteData, 'globalPriceMode');
+    _skipPush = true;
+    try {
+      mergeSettingsFromRemoteData(remoteData);
+      DB.settings.supabaseSettingsRowUpdatedAt = rows.updated_at;
+      if (typeof save === 'function') save('settings');
+      if (touchPriceMode) {
+        const m = DB.settings.globalPriceMode === 'HT' ? 'HT' : 'TTC';
+        try {
+          localStorage.setItem('priceMode', m);
+        } catch (_) {}
+        try {
+          window.dispatchEvent(new CustomEvent('invo-price-mode-change', { detail: { mode: m } }));
+        } catch (_) {}
+      }
+    } finally {
+      _skipPush = false;
+    }
+  }
+
+  async function pushSettingsRow() {
+    if (!_client || _skipPush || !DB.settings?.supabaseSyncEnabled) return;
+    const table = TABLE_MAP.settings;
+    const data = extractSyncableSettings();
+    const now = new Date().toISOString();
+    const { error } = await _client.from(table).upsert(
+      {
+        id: SETTINGS_ROW_ID,
+        data,
+        deleted_at: null,
+        updated_at: now,
+      },
+      { onConflict: 'id' },
+    );
+    if (error) throw error;
+    _skipPush = true;
+    try {
+      DB.settings.supabaseSettingsRowUpdatedAt = now;
+      if (typeof save === 'function') save('settings');
+    } finally {
+      _skipPush = false;
+    }
   }
 
   function mergeCollection(localArr, remoteRows) {
@@ -77,6 +184,10 @@
 
   async function pullTable(dbKey) {
     if (!_client) return;
+    if (dbKey === 'settings') {
+      await pullSettingsRow();
+      return;
+    }
     const table = TABLE_MAP[dbKey];
     if (!table) return;
     const { data: rows, error } = await _client
@@ -94,6 +205,10 @@
 
   async function pushTable(dbKey) {
     if (!_client || _skipPush || !DB.settings?.supabaseSyncEnabled) return;
+    if (dbKey === 'settings') {
+      await pushSettingsRow();
+      return;
+    }
     const table = TABLE_MAP[dbKey];
     if (!table) return;
     const arr = DB[dbKey] || [];
@@ -160,6 +275,12 @@
       typeof renderBonsCommande === 'function'
     ) {
       renderBonsCommande();
+    }
+    if (set.has('settings')) {
+      if (typeof loadSettings === 'function') loadSettings();
+      if (typeof syncLogoSettingsUI === 'function') syncLogoSettingsUI();
+      if (typeof updateSettingsScore === 'function') updateSettingsScore();
+      if (typeof renderSettingsActivationStatus === 'function') void renderSettingsActivationStatus();
     }
     setTimeout(() => {
       if (typeof renderOverview === 'function') renderOverview(true);
